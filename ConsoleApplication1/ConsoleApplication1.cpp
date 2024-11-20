@@ -21,7 +21,6 @@ struct GameVariables
 	int width, height;
 	char** screen;
 	bool run;
-	char input;
 
 	int frogX, frogY;
 };
@@ -38,10 +37,10 @@ void PrintGameFrame(GameVariables &game)
 		}
 		printw("\n");
 	}
-
-
-	//attr_on( COLOR_PAIR(1), NULL );
-	//attr_off(COLOR_PAIR(1), NULL);
+	attr_on( COLOR_PAIR(1), NULL );
+	move(game.frogY, game.frogX);
+	printw("F");
+	attr_off(COLOR_PAIR(1), NULL);
 }
 
 void GameFrame(GameVariables &game, CursesVariables & curses)
@@ -62,19 +61,19 @@ bool Init(GameVariables& game, CursesVariables& curses)
 {
 	InitVariables init = {5, 10, 2 };
 
-	//game.frogX =  
+	game.frogX = init.initPosition;
+	game.frogY = init.numberOfStreets * 2;
 
 
 	game.run = true;
 	game.height = init.numberOfStreets * 2 + 1;
 	game.width = init.width;
-	//game.input = 'a';
 
-	game.screen = new char*[game.width];
+	game.screen = new char*[game.height];
 
 	for (int i = 0; i < game.height; ++i)
 	{
-		game.screen[i] = new char[game.height];
+		game.screen[i] = new char[game.width];
 		for (int j = 0; j < game.width; ++j)
 		{
 			if (i % 2)
@@ -90,6 +89,7 @@ bool Init(GameVariables& game, CursesVariables& curses)
 
 	// curses init
 	curses.win = initscr();
+	curs_set(0);
 	keypad(stdscr, TRUE);
 	nonl();
 	raw();
@@ -110,7 +110,10 @@ bool Init(GameVariables& game, CursesVariables& curses)
 
 void EndProgram(GameVariables& game)
 {
-	delete game.screen;
+	for (int i = 0; i < game.width; ++i)
+	{
+		delete[] game.screen[i];
+	}
 	endwin();
 }
 
@@ -118,7 +121,40 @@ void HandleInput(GameVariables& game, CursesVariables& curses)
 {
 	if (_kbhit())
 	{
-		game.input = getchar();
+		int input = getchar();
+
+		switch (input)
+		{
+			case 'w':
+			{
+				if (game.frogY > 0)
+				{
+					game.frogY--;
+				}
+				break;
+			}
+			case 'a':
+			{
+				if (game.frogX > 0)
+				{
+					game.frogX--;
+				}
+				break;
+			}
+			case 'd':
+			{
+				if (game.frogX < game.width - 1)
+				{
+					game.frogX++;
+				}
+				break;
+			}
+			case 'q':
+			{
+				game.run = false;
+				break;
+			}
+		}
 	}
 }
 
@@ -136,8 +172,8 @@ int main()
 
 	while (game.run)
 	{
-		HandleInput(game, curses);
 		GameFrame(game, curses);
+		HandleInput(game, curses);
 	}
 
 	EndProgram(game);
