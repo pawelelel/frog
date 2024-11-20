@@ -180,13 +180,7 @@ bool Init(GameVariables& game, CursesVariables& curses)
 
 	// curses init
 	curses.win = initscr();
-	//curs_set(0);
-	//keypad(stdscr, TRUE);
-	//nonl();
-	//raw();
-	//noecho();
-	//notimeout(stdscr, TRUE);
-	//nodelay(curses.win, TRUE);
+	curs_set(0);
 
 	// colors init
 	curses.colors = has_colors();
