@@ -7,7 +7,8 @@
 enum Colors
 {
 	Green = 1,
-	Red = 2
+	Red = 2,
+	Yellow = 3
 };
 
 struct Car
@@ -27,6 +28,7 @@ struct InitVariables
 	int width;
 	int initPosition;
 	int numberOfCars;
+	int seed;
 };
 
 struct CursesVariables
@@ -48,6 +50,8 @@ struct GameVariables
 
 	int frames;
 	double time;
+
+	int destinationX, destinationY;
 };
 
 void MoveCars(GameVariables& game)
@@ -95,18 +99,23 @@ void PrintGameFrame(GameVariables &game)
 		printw("\n");
 	}
 
-	attr_on(COLOR_PAIR(Red), NULL);
+	attr_on(COLOR_PAIR(Yellow), NULL);
 	for (int i = 0; i < game.carsSize; ++i)
 	{
 		move(game.cars[i].y + 1, game.cars[i].x);
 		printw("C");
 	}
-	attr_off(COLOR_PAIR(Red), NULL);
+	attr_off(COLOR_PAIR(Yellow), NULL);
 
 	attr_on( COLOR_PAIR(Green), NULL );
 	move(game.frogY + 1, game.frogX);
 	printw("F");
-	attr_off(COLOR_PAIR(1), NULL);
+	attr_off(COLOR_PAIR(Green), NULL);
+
+	attr_on(COLOR_PAIR(Red), NULL);
+	move(game.destinationY + 1, game.destinationX);
+	printw("H");
+	attr_off(COLOR_PAIR(Red), NULL);
 }
 
 void CheckCollision(GameVariables& game)
@@ -120,22 +129,63 @@ void CheckCollision(GameVariables& game)
 	}
 }
 
+void AmIHome(GameVariables& game)
+{
+	if (game.destinationX == game.frogX && game.destinationY == game.frogY)
+	{
+		game.run = false;
+	}
+}
+
 void GameFrame(GameVariables &game, CursesVariables & curses)
 {
 	game.frames++;
 	MoveCars(game);
 	CheckCollision(game);
+	AmIHome(game);
 	PrintGameFrame(game);
+}
+
+bool GetInit(InitVariables&init, const char * filename)
+{
+	FILE* file;
+	file = fopen(filename, "r");
+
+	if (file == NULL)
+	{
+		return false;
+	}
+
+	fscanf(file, "Number of streets: %d\n", &init.numberOfStreets);
+	fscanf(file, "Width: %d\n", &init.width);
+	fscanf(file, "Number of cars: %d\n", &init.numberOfCars);
+	fscanf(file, "Seed: %d\n", &init.seed);
+	return true;
 }
 
 bool Init(GameVariables& game, CursesVariables& curses)
 {
-	srand(time(NULL));
-	InitVariables init = {10, 50, 2, 20 };
+	InitVariables init;
+	if (!GetInit(init, "game.config"))
+	{
+		return false;
+	}
+	if (init.seed == -1)
+	{
+		srand(time(NULL));
+	}
+	else
+	{
+		srand(init.seed);
+	}
 
 	// frog init
-	game.frogX = init.initPosition;
+	game.frogX = rand() % init.width;
 	game.frogY = init.numberOfStreets * 2;
+
+	// home init
+	game.destinationX = rand() % init.width;
+	game.destinationY = 0;
 
 	// other variables
 	game.run = true;
@@ -189,12 +239,13 @@ bool Init(GameVariables& game, CursesVariables& curses)
 		start_color();
 		init_pair(Green, COLOR_GREEN, COLOR_BLACK);
 		init_pair(Red, COLOR_RED, COLOR_BLACK);
+		init_pair(Yellow, COLOR_YELLOW, COLOR_BLACK);
 	}
 
 	return true;
 }
 
-void EndProgram(GameVariables& game)
+void EndProgram(GameVariables& game, CursesVariables&curses)
 {
 	for (int i = 0; i < game.width; ++i)
 	{
@@ -204,7 +255,7 @@ void EndProgram(GameVariables& game)
 	clear();
 	printw("Koniec gry");
 	printw("Czas gry: %.2lfs", game.time);
-	
+	wrefresh(curses.win);
 
 	endwin();
 }
@@ -257,7 +308,7 @@ int main()
 
 	if (!Init(game, curses))
 	{
-		EndProgram(game);
+		EndProgram(game, curses);
 		return -1;
 	}
 
@@ -274,7 +325,7 @@ int main()
 		wrefresh(curses.win);
 	}
 
-	EndProgram(game);
+	EndProgram(game, curses);
 
 	return 0;
 }
