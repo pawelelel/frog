@@ -4,20 +4,458 @@
 #include <stdlib.h>
 #include <curses.h>
 
+// enums
+
 enum Colors
 {
-	Green = 1,
+	GrassGreen = 1,
 	Red = 2,
-	Yellow = 3
+	Yellow = 3,
+	FrogGreen = 4,
+	Gray = 5
 };
 
+enum State
+{
+	Start = 0,
+	Game = 1,
+	GameOver = 2
+};
+
+enum GameStateChange
+{
+	ChangeNoChange = 0,
+	ChangeToStart = 1,
+	ChangeToGame = 2,
+	ChangeToGameOver = 3,
+	ExitProgram = 4
+};
+
+enum RoadType
+{
+	Grass = 0,
+	Street = 1
+};
+
+// structs
+
+struct GameState
+{
+	void (*init)(GameState&);
+	GameStateChange(*keysHandler)(GameState&, int);
+	GameStateChange(*timerHandler)(GameState&, int);
+	void (*draw)(GameState&, WINDOW*);
+	void (*done)();
+
+	void* data;
+};
+
+struct Frog
+{
+	int x, y;
+	int skin;
+};
+
+struct Road
+{
+	RoadType type;
+};
+
+struct Home
+{
+	int x, y;
+};
+
+struct Board
+{
+	Frog frog;
+	Road* roads;
+	Home home;
+	int roadsSize;
+	int width;
+};
+
+// window
+
+WINDOW* InitWindow()
+{
+	// curses init
+	WINDOW*win = initscr();
+	curs_set(0);
+
+	// colors init
+	if (has_colors())
+	{
+		start_color();
+		init_pair(GrassGreen, COLOR_BLACK, COLOR_GREEN);
+		init_pair(FrogGreen, COLOR_GREEN, COLOR_BLACK);
+		init_pair(Red, COLOR_RED, COLOR_BLACK);
+		init_pair(Yellow, COLOR_YELLOW, COLOR_BLACK);
+		init_color(8, 150, 75, 0);
+		init_pair(Gray, 8, COLOR_BLACK);
+	}
+
+	return win;
+}
+
+// Start struct init
+
+GameStateChange StartKeysHandler(GameState& self, int key)
+{
+	switch (key)
+	{
+		case 'q':
+		{
+			return ExitProgram;
+		}
+		case 's':
+		{
+			return ChangeToGame;
+		}
+		default:
+		{
+			return ChangeNoChange;
+		}
+	}
+}
+
+GameStateChange StartTimerHandler(GameState& self, int time)
+{
+	return ChangeNoChange;
+}
+
+void StartDraw(GameState& self, WINDOW* win)
+{
+	clear();
+	printw("Start\n");
+	printw("s => start new game\n");
+	printw("q => quit program\n");
+	wrefresh(win);
+}
+
+void StartDone()
+{
+	
+}
+
+void StartInit(GameState& init)
+{
+	
+}
+
+GameState CreateStart()
+{
+	GameState start;
+	start.init = &StartInit;
+	start.keysHandler = &StartKeysHandler;
+	start.timerHandler = &StartTimerHandler;
+	start.draw = &StartDraw;
+	start.done = &StartDone;
+	return start;
+}
+
+// Game struct init
+
+GameStateChange GameKeysHandler(GameState& self, int key)
+{
+	Board* board = (Board*)self.data;
+
+	switch (key)
+	{
+		case 'q':
+		{
+			return ChangeToStart;
+		}
+		case 'w':
+		{
+			if (board->frog.y > 0)
+			{
+				board->frog.y--;
+			}
+			return ChangeNoChange;
+		}
+		case 'a':
+		{
+			if (board->frog.x > 0)
+			{
+				board->frog.x--;
+			}
+			return ChangeNoChange;
+		}
+		case 's':
+		{
+			if (board->frog.y < board->roadsSize - 1)
+			{
+				board->frog.y++;
+			}
+			return ChangeNoChange;
+		}
+		case 'd':
+		{
+			if (board->frog.x < board->width - 1)
+			{
+				board->frog.x++;
+			}
+			return ChangeNoChange;
+		}
+		default:
+		{
+			return ChangeNoChange;
+		}
+	}
+}
+
+GameStateChange GameTimerHandler(GameState& self, int time)
+{
+	Board* b = (Board*)self.data;
+	b->frog.skin = time / 1000 % 2;
+
+	if (time > 10000)
+	{
+		return ChangeToGameOver;
+	}
+	return ChangeNoChange;
+}
+
+void DrawStreet(int width)
+{
+	//attr_on(COLOR_PAIR(Gray), NULL);
+	for (int i = 0; i < width; ++i)
+	{
+		printw("=");
+	}
+	//attr_off(COLOR_PAIR(Gray), NULL);
+}
+
+void DrawGrass(int width)
+{
+	attr_on(COLOR_PAIR(GrassGreen), NULL);
+	for (int i = 0; i < width; ++i)
+	{
+		printw(" ");
+	}
+	attr_off(COLOR_PAIR(GrassGreen), NULL);
+}
+
+void GameDraw(GameState& self, WINDOW*win)
+{
+	clear();
+
+	Board* board = (Board*)self.data;
+
+	// roads
+	for (int i = 0; i < board->roadsSize; ++i)
+	{
+		switch (board->roads[i].type) {
+			case Grass:
+			{
+				DrawGrass(board->width);
+				break;
+			}
+			case Street:
+			{
+				DrawStreet(board->width);
+				break;
+			}
+		}
+		printw("\n");
+	}
+
+	move(board->frog.y, board->frog.x);
+
+	attr_on(COLOR_PAIR(FrogGreen), NULL);
+	if (board->frog.skin == 0)
+	{
+		printw("F");
+	}
+	else
+	{
+		printw("f");
+	}
+	attr_off(COLOR_PAIR(FrogGreen), NULL);
+
+	move(board->home.y, board->home.x);
+	printw("H");
+
+	wrefresh(win);
+}
+
+void GameDone()
+{
+	
+}
+
+void GameInit(GameState& self)
+{
+	Board* board = new Board;
+	board->width = 50;
+	board->roadsSize = 10;
+	board->roads = new Road[board->roadsSize];
+	board->roads[0].type = Grass;
+	board->roads[1].type = Street;
+	board->roads[2].type = Street;
+	board->roads[3].type = Grass;
+	board->roads[4].type = Grass;
+	board->roads[5].type = Street;
+	board->roads[6].type = Street;
+	board->roads[7].type = Street;
+	board->roads[8].type = Grass;
+	board->roads[9].type = Grass;
+	board->frog = { board->width / 2, board->roadsSize-1, 0 };
+	int homeY = rand() % board->width;
+	board->home = { homeY, 0 };
+
+	self.data = board;
+}
+
+GameState CreateGame()
+{
+	GameState game;
+	game.init = &GameInit;
+	game.keysHandler = &GameKeysHandler;
+	game.timerHandler = &GameTimerHandler;
+	game.draw = &GameDraw;
+	game.done = &GameDone;
+	return game;
+}
+
+// Game over struct init
+
+GameStateChange GameOverKeysHandler(GameState& self, int key)
+{
+	switch (key)
+	{
+		case 'q':
+		{
+			return ChangeToStart;
+		}
+		default:
+		{
+			return ChangeNoChange;
+		}
+	}
+}
+
+GameStateChange GameOverTimerHandler(GameState& self, int time)
+{
+	return ChangeNoChange;
+}
+
+void GameOverDraw(GameState& self, WINDOW*win)
+{
+	clear();
+	printw("Game over\n");
+	wrefresh(win);
+}
+
+void GameOverDone()
+{
+
+}
+
+void GameOverInit(GameState& self)
+{
+	
+}
+
+GameState CreateGameOver()
+{
+	GameState gameOver;
+	gameOver.init = &GameOverInit;
+	gameOver.keysHandler = &GameOverKeysHandler;
+	gameOver.timerHandler = &GameOverTimerHandler;
+	gameOver.draw = &GameOverDraw;
+	gameOver.done = &GameOverDone;
+	return gameOver;
+}
+
+int ReadKeys()
+{
+	if (_kbhit())
+	{
+		int input = getchar();
+		return input;
+	}
+	return NULL;
+}
+
+GameStateChange MainLoop(GameState& current, WINDOW* win)
+{
+	clock_t startTime = clock();
+	while (true)
+	{
+		GameStateChange change;
+
+		int key = ReadKeys();
+		if (key != NULL)
+		{
+			change = current.keysHandler(current, key);
+			if (change != ChangeNoChange)
+			{
+				return change;
+			}
+		}
+
+		clock_t now = clock();
+		int time = (now - startTime) * 1000 / CLOCKS_PER_SEC;
+		change = current.timerHandler(current, time);
+		if (change != ChangeNoChange)
+		{
+			return change;
+		}
+
+		current.draw(current, win);
+	}
+}
+
+int main()
+{
+	srand(time(NULL));
+
+	GameState Start = CreateStart();
+	GameState Game = CreateGame();
+	GameState GameOver = CreateGameOver();
+
+	GameState current = Start;
+	current.init(current);
+
+	WINDOW* win = InitWindow();
+
+	while (true)
+	{
+		GameStateChange change = MainLoop(current, win);
+		current.done();
+		switch (change)
+		{
+			case ChangeToStart:
+			{
+				current = Start;
+				break;
+			}
+			case ChangeToGame:
+			{
+				current = Game;
+				break;
+			}
+			case ChangeToGameOver:
+			{
+				current = GameOver;
+				break;
+			}
+			case ExitProgram:
+			{
+				return 0;
+			}
+		}
+		current.init(current);
+	}
+}
+
+/*
 struct Car
 {
 	int x, y;
-	/*
-	 0 => left
-	 1 => right
-	*/
+
 	int direction;
 	int speed;
 };
@@ -300,9 +738,9 @@ void HandleInput(GameVariables& game, CursesVariables& curses)
 		}
 	}
 }
+*/
 
-int main()
-{
+/*
 	GameVariables game = {};
 	CursesVariables curses = {};
 
@@ -326,6 +764,4 @@ int main()
 	}
 
 	EndProgram(game, curses);
-
-	return 0;
-}
+	*/
