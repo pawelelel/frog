@@ -108,6 +108,8 @@ struct Board
 	Home home;
 	int roadsSize;
 	int width;
+	int score;
+	int time;
 };
 
 // window
@@ -250,12 +252,12 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 		}
 		case 'w':
 		{
-			if (board->frog.y > 0)
+			if (board->frog.y > 1)
 			{
 				board->frog.y--;
 				if (IsFrogInHome(board->frog, board->home))
 				{
-					GameOverMessageData* data = new GameOverMessageData{ true, 100 };
+					GameOverMessageData* data = new GameOverMessageData{ true, board->score };
 					return { ChangeToGameOver, data};
 				}
 			}
@@ -268,7 +270,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 				board->frog.x--;
 				if (IsFrogInHome(board->frog, board->home))
 				{
-					GameOverMessageData* data = new GameOverMessageData{ true, 100 };
+					GameOverMessageData* data = new GameOverMessageData{ true, board->score };
 					return { ChangeToGameOver, data };
 				}
 			}
@@ -276,12 +278,12 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 		}
 		case 's':
 		{
-			if (board->frog.y < board->roadsSize - 1)
+			if (board->frog.y < board->roadsSize)
 			{
 				board->frog.y++;
 				if (IsFrogInHome(board->frog, board->home))
 				{
-					GameOverMessageData* data = new GameOverMessageData{ true, 100 };
+					GameOverMessageData* data = new GameOverMessageData{ true, board->score };
 					return { ChangeToGameOver, data };
 				}
 			}
@@ -294,7 +296,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 				board->frog.x++;
 				if (IsFrogInHome(board->frog, board->home))
 				{
-					GameOverMessageData* data = new GameOverMessageData{ true, 100 };
+					GameOverMessageData* data = new GameOverMessageData{ true, board->score };
 					return { ChangeToGameOver, data };
 				}
 			}
@@ -311,6 +313,7 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 {
 	Board* b = (Board*)self.data;
 	b->frog.skin = time / 1000 % 2;
+	b->time = time;
 
 	if (time > 10000)
 	{
@@ -346,6 +349,8 @@ void GameDraw(GameState& self, WINDOW*win)
 
 	Board* board = (Board*)self.data;
 
+	printw("Time: %ds    Score: %d\n", board->time/1000, board->score);
+
 	// roads
 	for (int i = 0; i < board->roadsSize; ++i)
 	{
@@ -364,6 +369,8 @@ void GameDraw(GameState& self, WINDOW*win)
 		printw("\n");
 	}
 
+	printw("Pawe³ Leczkowski 203700");
+
 	move(board->frog.y, board->frog.x);
 
 	StartPair(FrogGreen_Black);
@@ -381,6 +388,8 @@ void GameDraw(GameState& self, WINDOW*win)
 	StartPair(Black_Brick);
 	printw("H");
 	EndPair(Black_Brick);
+
+
 
 	wrefresh(win);
 }
@@ -406,9 +415,11 @@ void GameInit(GameState& self, void* initData)
 	board->roads[7].type = Street;
 	board->roads[8].type = Grass;
 	board->roads[9].type = Grass;
-	board->frog = { board->width / 2, board->roadsSize-1, 0 };
+	board->frog = { board->width / 2, board->roadsSize, 0 };
 	int homeY = rand() % board->width;
-	board->home = { homeY, 0 };
+	board->home = { homeY, 1 };
+	board->score = 200;
+	board->time = 0;
 
 	self.data = board;
 }
