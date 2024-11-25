@@ -11,7 +11,11 @@ enum ColorPairs
 	GrassGreen_GrassGreen = 1,
 	FrogGreen_Black = 2,
 	RoadGray_RoadGray = 3,
-	Black_Brick = 4
+	Black_Brick = 4,
+	Yellow_Black = 5,
+	FrogBlood_Black = 6,
+	FrogBlood_FrogBlood = 7,
+	Window_Black = 8,
 };
 
 enum Colors
@@ -27,7 +31,9 @@ enum Colors
 	GrassGreen = 8,
 	FrogGreen = 9,
 	RoadGray = 10,
-	Brick = 11
+	Brick = 11,
+	FrogBlood = 12,
+	Window = 13
 };
 
 enum State
@@ -113,7 +119,7 @@ void InitColor(int colorId, short r, short g, short b)
 	init_color(colorId, r, g, b);
 }
 
-void InitColorPairs(short pairId, short colorFont, short colorBack)
+void InitColorPair(short pairId, short colorFont, short colorBack)
 {
 	init_pair(pairId, colorFont, colorBack);
 }
@@ -143,11 +149,17 @@ WINDOW* InitWindow()
 		InitColor(FrogGreen, 153, 198, 142);
 		InitColor(RoadGray, 179, 179, 179);
 		InitColor(Brick, 192, 50, 72);
+		InitColor(FrogBlood, 19, 109, 21);
+		InitColor(Window, 0, 153, 255);
 
-		InitColorPairs(GrassGreen_GrassGreen, GrassGreen, GrassGreen);
-		InitColorPairs(FrogGreen_Black, FrogGreen, Black);
-		InitColorPairs(RoadGray_RoadGray, RoadGray, RoadGray);
-		InitColorPairs(Black_Brick, Black, Brick);
+		InitColorPair(GrassGreen_GrassGreen, GrassGreen, GrassGreen);
+		InitColorPair(FrogGreen_Black, FrogGreen, Black);
+		InitColorPair(RoadGray_RoadGray, RoadGray, RoadGray);
+		InitColorPair(Black_Brick, Black, Brick);
+		InitColorPair(Yellow_Black, Yellow, Black);
+		InitColorPair(FrogBlood_Black, FrogBlood, Black);
+		InitColorPair(FrogBlood_FrogBlood, FrogBlood, FrogBlood);
+		InitColorPair(Window_Black, Window, Black);
 	}
 
 	return win;
@@ -294,7 +306,7 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 	Board* b = (Board*)self.data;
 	b->frog.skin = time / 1000 % 2;
 
-	if (time > 10000)
+	if (time > 200)
 	{
 		GameOverMessageData* data = new GameOverMessageData{ false, 0 };
 		return { ChangeToGameOver, data };
@@ -448,21 +460,21 @@ void GameOverDraw(GameState& self, WINDOW*win)
 		printw("\n");
 		printw("                                  +--------------------\n");
 		printw("                                 //---------++---------\n");
-		printw("                                //          ||         \n");
-		printw("                               //           ||         \n");
-		printw("                              //            ||         \n");
+		printw("                                /"); StartPair(Window_Black); printw("/##########"); EndPair(Window_Black); printw("||"); StartPair(Window_Black); printw("#########"); EndPair(Window_Black); printw("\n");
+		printw("                               /"); StartPair(Window_Black); printw("/###########"); EndPair(Window_Black); printw("||"); StartPair(Window_Black); printw("#########"); EndPair(Window_Black); printw("\n");
+		printw("                              /"); StartPair(Window_Black); printw("/############"); EndPair(Window_Black); printw("||"); StartPair(Window_Black); printw("#########"); EndPair(Window_Black); printw("\n");
 		printw("                             //-------------++---------\n");
-		printw(" +--------------------------++--------------++---------\n");
-		printw(" ###                         |           O  ||         \n");
-		printw(" ###       ______            |              ||         \n");
-		printw(" |       / ,-~-, \\           |              ||         \n");
-		printw(" |      // \\   / \\\\          |              ||         \n");
-		printw(" |     |,   \\ /   ,|         |              ||         \n");
-		printw(" +-----+|----O----|+-----------------------------------\n");
-		printw("        \\   / \\   /                                    \n");
-		printw("         ',/   \\,'                                     \n");
-		printw("           '-~-'                                       \n");
-		printw("-------------------------------------------------------\n");
+		StartPair(Yellow_Black); printw("\\"); EndPair(Yellow_Black); printw("+--------------------------++--------------++---------\n");
+		StartPair(Yellow_Black); printw("-###"); EndPair(Yellow_Black); printw("                         |           O  ||         \n");
+		StartPair(Yellow_Black); printw("-###"); EndPair(Yellow_Black); printw("       ______            |              ||         \n");
+		StartPair(Yellow_Black); printw("/"); EndPair(Yellow_Black); printw("|       / ,-~-, \\           |              ||         \n");
+		StartPair(FrogBlood_Black); printw(" |"); EndPair(FrogBlood_Black);  StartPair(FrogBlood_FrogBlood); printw("  "); EndPair(FrogBlood_FrogBlood);  printw("    // \\   / \\\\          |              ||         \n");
+		StartPair(FrogBlood_Black); printw(" |"); EndPair(FrogBlood_Black); StartPair(FrogBlood_FrogBlood); printw("   "); EndPair(FrogBlood_FrogBlood); printw("  |,   \\ /   ,|         |              ||         \n");
+		StartPair(FrogBlood_Black); printw(" +-----+|--"); EndPair(FrogBlood_Black); printw("--O----|+-----------------------------------\n");
+		StartPair(FrogBlood_Black); printw("        \\"); EndPair(FrogBlood_Black); printw("   / \\   /                                    \n");
+		StartPair(FrogBlood_Black); printw("         ',"); EndPair(FrogBlood_Black); printw("/   \\,'                                     \n");
+		StartPair(FrogBlood_Black); printw("           '-~-'"); EndPair(FrogBlood_Black); printw("                                       \n");
+		StartPair(FrogBlood_FrogBlood); printw("-------------------------"); EndPair(FrogBlood_FrogBlood); StartPair(RoadGray_RoadGray); printw("------------------------------\n"); EndPair(RoadGray_RoadGray);
 		printw("                 q => quit to main menu                \n");
 	}
 	wrefresh(win);
