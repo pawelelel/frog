@@ -16,6 +16,8 @@ enum ColorPairs
 	FrogBlood_Black = 6,
 	FrogBlood_FrogBlood = 7,
 	Window_Black = 8,
+	Brick_Black = 9,
+	GrassGreen_Black = 10,
 };
 
 enum Colors
@@ -138,6 +140,8 @@ WINDOW* InitWindow()
 {
 	// curses init
 	WINDOW*win = initscr();
+	int col = 56, row = 45;
+	resize_term(row, col);
 	curs_set(0);
 
 	// colors init
@@ -160,6 +164,8 @@ WINDOW* InitWindow()
 		InitColorPair(FrogBlood_Black, FrogBlood, Black);
 		InitColorPair(FrogBlood_FrogBlood, FrogBlood, FrogBlood);
 		InitColorPair(Window_Black, Window, Black);
+		InitColorPair(Brick_Black, Brick, Black);
+		InitColorPair(GrassGreen_Black, GrassGreen, Black);
 	}
 
 	return win;
@@ -306,7 +312,7 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 	Board* b = (Board*)self.data;
 	b->frog.skin = time / 1000 % 2;
 
-	if (time > 200)
+	if (time > 10000)
 	{
 		GameOverMessageData* data = new GameOverMessageData{ false, 0 };
 		return { ChangeToGameOver, data };
@@ -447,11 +453,52 @@ void GameOverDraw(GameState& self, WINDOW*win)
 	clear();
 	if (data->won)
 	{
-		printw("You won!!!\n");
-		printw("Points: %d\n", data->points);
+		printw("\n");
+		printw("        Y   Y   OO   U  U    W   W   OO   N   N        \n");
+		printw("         Y Y   O  O  U  U    W   W  O  O  NN  N        \n");
+		printw("          Y    O  O  U  U    W   W  O  O  N N N        \n");
+		printw("          Y    O  O  U  U    W W W  O  O  N  NN        \n");
+		printw("          Y     OO    UU      W W    OO   N   N        \n");
+		printw("\n"); StartPair(Brick_Black);
+		printw("                                    +--+               \n");
+		printw("           _________________________|##|_____          \n");
+		printw("          /#########################|##|#####\\        \n");
+		printw("         /##########################+--+######\\       \n");
+		printw("        /######################################\\      \n");
+		printw("       /########################################\\     \n");
+		printw("      /+----------------------------------------+\\    \n");
+		printw("     / |                                        | \\   \n");
+		printw("       |                                        |      \n");
+		printw("       |  +------+                              |      \n"); EndPair(Brick_Black);
+		StartPair(Brick_Black); printw("       |  |      |             "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("(.)_(.)"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("          |      \n"); EndPair(Brick_Black);
+		StartPair(Brick_Black); printw("       |  |      |          "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("_ (  ,_,  ) _"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("       |      \n"); EndPair(Brick_Black);
+		StartPair(Brick_Black); printw("       |  |    o |         "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("/ \\/`-----'\\/ \\"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("      |      \n"); EndPair(Brick_Black);
+		StartPair(Brick_Black); printw("       |  |      |       "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("__\\ ( (     ) ) /__"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("    |      \n"); EndPair(Brick_Black);
+		StartPair(Brick_Black); printw("       |  |      |       "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(")   /\\ \\._./ /\\   ("); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("    |     \n"); EndPair(Brick_Black);
+		StartPair(Brick_Black); printw("       |  |      |        "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(")_/ /|\\   /|\\ \\_("); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("     |      \n"); EndPair(Brick_Black);
+		StartPair(GrassGreen_Black); printw("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"); EndPair(GrassGreen_Black);
+		printw("                    Your score: %d                     \n", data->points);
+		printw("\n");
+		printw("                      Enter name:                      \n");
+		printw("                       Nam_                            \n");
+		printw("                      Best scores:                     \n");
+		printw("                  +------------+----+                  \n");
+		printw("                  |     You    | 65 |                  \n");
+		printw("                  +------------+----+                  \n");
+		printw("                  | Name 2 cos | 50 |                  \n");
+		printw("                  +------------+----+                  \n");
+		printw("                  | Name 3 cos | 30 |                  \n");
+		printw("                  +------------+----+                  \n");
+		printw("                  | Name 4 cos | 20 |                  \n");
+		printw("                  +------------+----+                  \n");
+		printw("                  | Name 5 cos | 20 |                  \n");
+		printw("                  +------------+----+                  \n");
+		printw("\n");
+		printw("                 q => quit to main menu                \n");
 	}
 	else
 	{
+		printw("\n");
 		printw("      Y   Y   OO   U  U    L     OO    SS   TTTTT      \n");
 		printw("       Y Y   O  O  U  U    L    O  O  S       T        \n");
 		printw("        Y    O  O  U  U    L    O  O   SS     T        \n");
