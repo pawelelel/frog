@@ -6,13 +6,28 @@
 
 // enums
 
+enum ColorPairs
+{
+	GrassGreen_GrassGreen = 1,
+	FrogGreen_Black = 2,
+	RoadGray_RoadGray = 3,
+	Black_Brick = 4
+};
+
 enum Colors
 {
-	GrassGreen = 1,
-	Red = 2,
-	Yellow = 3,
-	FrogGreen = 4,
-	Gray = 5
+	Black = COLOR_BLACK,
+	Blue = COLOR_BLUE,
+	Green = COLOR_GREEN,
+	Cyan = COLOR_CYAN,
+	Red = COLOR_RED,
+	Magenta = COLOR_MAGENTA,
+	Yellow = COLOR_YELLOW,
+	White = COLOR_WHITE,
+	GrassGreen = 8,
+	FrogGreen = 9,
+	RoadGray = 10,
+	Brick = 11
 };
 
 enum State
@@ -89,6 +104,30 @@ struct Board
 
 // window
 
+void InitColor(int colorId, short r, short g, short b)
+{
+	r = r * 200 / 51;
+	g = g * 200 / 51;
+	b = b * 200 / 51;
+
+	init_color(colorId, r, g, b);
+}
+
+void InitColorPairs(short pairId, short colorFont, short colorBack)
+{
+	init_pair(pairId, colorFont, colorBack);
+}
+
+void StartPair(int pairId)
+{
+	attr_on(COLOR_PAIR(pairId), NULL);
+}
+
+void EndPair(int pairId)
+{
+	attr_off(COLOR_PAIR(pairId), NULL);
+}
+
 WINDOW* InitWindow()
 {
 	// curses init
@@ -99,12 +138,16 @@ WINDOW* InitWindow()
 	if (has_colors())
 	{
 		start_color();
-		init_pair(GrassGreen, COLOR_BLACK, COLOR_GREEN);
-		init_pair(FrogGreen, COLOR_GREEN, COLOR_BLACK);
-		init_pair(Red, COLOR_RED, COLOR_BLACK);
-		init_pair(Yellow, COLOR_YELLOW, COLOR_BLACK);
-		init_color(8, 150, 75, 0);
-		init_pair(Gray, 8, COLOR_BLACK);
+
+		InitColor(GrassGreen, 65, 152, 10);
+		InitColor(FrogGreen, 153, 198, 142);
+		InitColor(RoadGray, 179, 179, 179);
+		InitColor(Brick, 192, 50, 72);
+
+		InitColorPairs(GrassGreen_GrassGreen, GrassGreen, GrassGreen);
+		InitColorPairs(FrogGreen_Black, FrogGreen, Black);
+		InitColorPairs(RoadGray_RoadGray, RoadGray, RoadGray);
+		InitColorPairs(Black_Brick, Black, Brick);
 	}
 
 	return win;
@@ -261,22 +304,22 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 
 void DrawStreet(int width)
 {
-	//attr_on(COLOR_PAIR(Gray), NULL);
+	StartPair(RoadGray_RoadGray);
 	for (int i = 0; i < width; ++i)
 	{
 		printw("=");
 	}
-	//attr_off(COLOR_PAIR(Gray), NULL);
+	EndPair(RoadGray_RoadGray);
 }
 
 void DrawGrass(int width)
 {
-	attr_on(COLOR_PAIR(GrassGreen), NULL);
+	StartPair(GrassGreen_GrassGreen);
 	for (int i = 0; i < width; ++i)
 	{
 		printw(" ");
 	}
-	attr_off(COLOR_PAIR(GrassGreen), NULL);
+	EndPair(GrassGreen_GrassGreen);
 }
 
 void GameDraw(GameState& self, WINDOW*win)
@@ -305,7 +348,7 @@ void GameDraw(GameState& self, WINDOW*win)
 
 	move(board->frog.y, board->frog.x);
 
-	attr_on(COLOR_PAIR(FrogGreen), NULL);
+	StartPair(FrogGreen_Black);
 	if (board->frog.skin == 0)
 	{
 		printw("F");
@@ -314,10 +357,12 @@ void GameDraw(GameState& self, WINDOW*win)
 	{
 		printw("f");
 	}
-	attr_off(COLOR_PAIR(FrogGreen), NULL);
+	EndPair(FrogGreen_Black);
 
 	move(board->home.y, board->home.x);
+	StartPair(Black_Brick);
 	printw("H");
+	EndPair(Black_Brick);
 
 	wrefresh(win);
 }
@@ -388,7 +433,6 @@ void GameOverDraw(GameState& self, WINDOW*win)
 	GameOverMessageData* data = (GameOverMessageData*)self.data;
 
 	clear();
-	printw("Game over\n");
 	if (data->won)
 	{
 		printw("You won!!!\n");
@@ -396,7 +440,30 @@ void GameOverDraw(GameState& self, WINDOW*win)
 	}
 	else
 	{
-		printw("You lost :(\n");
+		printw("      Y   Y   OO   U  U    L     OO    SS   TTTTT      \n");
+		printw("       Y Y   O  O  U  U    L    O  O  S       T        \n");
+		printw("        Y    O  O  U  U    L    O  O   SS     T        \n");
+		printw("        Y    O  O  U  U    L    O  O     S    T        \n");
+		printw("        Y     OO    UU     LLL   OO    SS     T        \n");
+		printw("\n");
+		printw("                                  +--------------------\n");
+		printw("                                 //---------++---------\n");
+		printw("                                //          ||         \n");
+		printw("                               //           ||         \n");
+		printw("                              //            ||         \n");
+		printw("                             //-------------++---------\n");
+		printw(" +--------------------------++--------------++---------\n");
+		printw(" ###                         |           O  ||         \n");
+		printw(" ###       ______            |              ||         \n");
+		printw(" |       / ,-~-, \\           |              ||         \n");
+		printw(" |      // \\   / \\\\          |              ||         \n");
+		printw(" |     |,   \\ /   ,|         |              ||         \n");
+		printw(" +-----+|----O----|+-----------------------------------\n");
+		printw("        \\   / \\   /                                    \n");
+		printw("         ',/   \\,'                                     \n");
+		printw("           '-~-'                                       \n");
+		printw("-------------------------------------------------------\n");
+		printw("                 q => quit to main menu                \n");
 	}
 	wrefresh(win);
 }
@@ -474,7 +541,7 @@ int main()
 	current.init(current, NULL);
 
 	WINDOW* win = InitWindow();
-
+	
 	while (true)
 	{
 		GameStateChange change = MainLoop(current, win);
@@ -504,6 +571,7 @@ int main()
 		current.init(current, change.data);
 	}
 }
+
 /*
 ascii art zaby ladnie na poczatku
 ladniejsze wyswietlanie (szare ulice (jak trawa) i kolory z rgb) domek czerwony
