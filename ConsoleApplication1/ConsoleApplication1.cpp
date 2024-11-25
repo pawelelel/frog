@@ -22,7 +22,7 @@ enum State
 	GameOver = 2
 };
 
-enum GameStateChange
+enum GameStateMessage
 {
 	ChangeNoChange = 0,
 	ChangeToStart = 1,
@@ -39,15 +39,27 @@ enum RoadType
 
 // structs
 
+struct GameStateChange
+{
+	GameStateMessage message;
+	void* data;
+};
+
 struct GameState
 {
-	void (*init)(GameState&);
+	void (*init)(GameState&, void*);
 	GameStateChange(*keysHandler)(GameState&, int);
 	GameStateChange(*timerHandler)(GameState&, int);
 	void (*draw)(GameState&, WINDOW*);
 	void (*done)();
 
 	void* data;
+};
+
+struct GameOverMessageData
+{
+	bool won;
+	int points;
 };
 
 struct Frog
@@ -106,22 +118,22 @@ GameStateChange StartKeysHandler(GameState& self, int key)
 	{
 		case 'q':
 		{
-			return ExitProgram;
+			return {ExitProgram, NULL};
 		}
 		case 's':
 		{
-			return ChangeToGame;
+			return { ChangeToGame, NULL };
 		}
 		default:
 		{
-			return ChangeNoChange;
+			return { ChangeNoChange, NULL };
 		}
 	}
 }
 
 GameStateChange StartTimerHandler(GameState& self, int time)
 {
-	return ChangeNoChange;
+	return { ChangeNoChange, NULL };
 }
 
 void StartDraw(GameState& self, WINDOW* win)
@@ -138,7 +150,7 @@ void StartDone()
 	
 }
 
-void StartInit(GameState& init)
+void StartInit(GameState& init, void* initData)
 {
 	
 }
@@ -156,6 +168,15 @@ GameState CreateStart()
 
 // Game struct init
 
+bool IsFrogInHome(Frog frog, Home home)
+{
+	if (frog.x == home.x && frog.y == home.y)
+	{
+		return true;
+	}
+	return false;
+}
+
 GameStateChange GameKeysHandler(GameState& self, int key)
 {
 	Board* board = (Board*)self.data;
@@ -164,43 +185,63 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 	{
 		case 'q':
 		{
-			return ChangeToStart;
+			return { ChangeToStart, NULL };
 		}
 		case 'w':
 		{
 			if (board->frog.y > 0)
 			{
 				board->frog.y--;
+				if (IsFrogInHome(board->frog, board->home))
+				{
+					GameOverMessageData* data = new GameOverMessageData{ true, 100 };
+					return { ChangeToGameOver, data};
+				}
 			}
-			return ChangeNoChange;
+			return { ChangeNoChange, NULL };
 		}
 		case 'a':
 		{
 			if (board->frog.x > 0)
 			{
 				board->frog.x--;
+				if (IsFrogInHome(board->frog, board->home))
+				{
+					GameOverMessageData* data = new GameOverMessageData{ true, 100 };
+					return { ChangeToGameOver, data };
+				}
 			}
-			return ChangeNoChange;
+			return { ChangeNoChange, NULL };
 		}
 		case 's':
 		{
 			if (board->frog.y < board->roadsSize - 1)
 			{
 				board->frog.y++;
+				if (IsFrogInHome(board->frog, board->home))
+				{
+					GameOverMessageData* data = new GameOverMessageData{ true, 100 };
+					return { ChangeToGameOver, data };
+				}
 			}
-			return ChangeNoChange;
+			return { ChangeNoChange, NULL };
 		}
 		case 'd':
 		{
 			if (board->frog.x < board->width - 1)
 			{
 				board->frog.x++;
+				if (IsFrogInHome(board->frog, board->home))
+				{
+					GameOverMessageData* data = new GameOverMessageData{ true, 100 };
+					return { ChangeToGameOver, data };
+				}
 			}
-			return ChangeNoChange;
+			return { ChangeNoChange, NULL };
 		}
 		default:
 		{
-			return ChangeNoChange;
+			return { ChangeNoChange, NULL };
 		}
 	}
 }
@@ -212,9 +253,10 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 
 	if (time > 10000)
 	{
-		return ChangeToGameOver;
+		GameOverMessageData* data = new GameOverMessageData{ false, 0 };
+		return { ChangeToGameOver, data };
 	}
-	return ChangeNoChange;
+	return { ChangeNoChange, NULL };
 }
 
 void DrawStreet(int width)
@@ -285,7 +327,7 @@ void GameDone()
 	
 }
 
-void GameInit(GameState& self)
+void GameInit(GameState& self, void* initData)
 {
 	Board* board = new Board;
 	board->width = 50;
@@ -327,24 +369,35 @@ GameStateChange GameOverKeysHandler(GameState& self, int key)
 	{
 		case 'q':
 		{
-			return ChangeToStart;
+			return { ChangeToStart, NULL };
 		}
 		default:
 		{
-			return ChangeNoChange;
+			return { ChangeNoChange, NULL };
 		}
 	}
 }
 
 GameStateChange GameOverTimerHandler(GameState& self, int time)
 {
-	return ChangeNoChange;
+	return { ChangeNoChange, NULL };
 }
 
 void GameOverDraw(GameState& self, WINDOW*win)
 {
+	GameOverMessageData* data = (GameOverMessageData*)self.data;
+
 	clear();
 	printw("Game over\n");
+	if (data->won)
+	{
+		printw("You won!!!\n");
+		printw("Points: %d\n", data->points);
+	}
+	else
+	{
+		printw("You lost :(\n");
+	}
 	wrefresh(win);
 }
 
@@ -353,9 +406,10 @@ void GameOverDone()
 
 }
 
-void GameOverInit(GameState& self)
+void GameOverInit(GameState& self, void* initData)
 {
-	
+	GameOverMessageData* data = (GameOverMessageData*)initData;
+	self.data = data;
 }
 
 GameState CreateGameOver()
@@ -390,7 +444,7 @@ GameStateChange MainLoop(GameState& current, WINDOW* win)
 		if (key != NULL)
 		{
 			change = current.keysHandler(current, key);
-			if (change != ChangeNoChange)
+			if (change.message != ChangeNoChange)
 			{
 				return change;
 			}
@@ -399,7 +453,7 @@ GameStateChange MainLoop(GameState& current, WINDOW* win)
 		clock_t now = clock();
 		int time = (now - startTime) * 1000 / CLOCKS_PER_SEC;
 		change = current.timerHandler(current, time);
-		if (change != ChangeNoChange)
+		if (change.message != ChangeNoChange)
 		{
 			return change;
 		}
@@ -417,7 +471,7 @@ int main()
 	GameState GameOver = CreateGameOver();
 
 	GameState current = Start;
-	current.init(current);
+	current.init(current, NULL);
 
 	WINDOW* win = InitWindow();
 
@@ -425,7 +479,7 @@ int main()
 	{
 		GameStateChange change = MainLoop(current, win);
 		current.done();
-		switch (change)
+		switch (change.message)
 		{
 			case ChangeToStart:
 			{
@@ -447,9 +501,17 @@ int main()
 				return 0;
 			}
 		}
-		current.init(current);
+		current.init(current, change.data);
 	}
 }
+/*
+ascii art zaby ladnie na poczatku
+ladniejsze wyswietlanie (szare ulice (jak trawa) i kolory z rgb) domek czerwony
+rozjechana zaba i zaba w domu ascii w game over
+punktacja w game over wyswietlanie bez logiki
+pasek na gorze z czasem i punktami w czasie gry
+pasek na dole z imie nazwisko index caly czas
+*/
 
 /*
 struct Car
