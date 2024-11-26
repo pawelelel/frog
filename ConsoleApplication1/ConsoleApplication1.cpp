@@ -444,8 +444,8 @@ void GameDraw(GameState& self, WINDOW*win)
 
 	printw("Pawel Leczkowski 203700");
 
-	const char carsChars[4][4] = { "", "", "H", "HH" };
 	// cars
+	const char carsChars[4][4] = { "", "", "H", "HH" };
 	for (int i = 0; i < board->carsSize; ++i)
 	{
 		Car& c = board->cars[i];
@@ -534,11 +534,11 @@ void GameInit(GameState& self, void* initData)
 
 	board->carsSize = 5;
 	board->cars = new Car[board->carsSize];
-	board->cars[0] = { 3, 4.0f, -2, 1};
+	board->cars[0] = { 3, 4.0f, -1, 1};
 	board->cars[1] = { 2, 2.5f, -1, 2};
 	board->cars[2] = { 1, 2.7f, 0, 5};
 	board->cars[3] = { 2, 5.5f, -1, 6};
-	board->cars[4] = { 3, 8.0f, -2, 7};
+	board->cars[4] = { 3, 8.0f, -1, 7};
 
 	self.data = board;
 }
@@ -762,6 +762,5 @@ int main()
 }
 
 /*
-referencje
 delete i new
 */
