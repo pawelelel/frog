@@ -444,13 +444,31 @@ void GameDraw(GameState& self, WINDOW*win)
 
 	printw("Pawel Leczkowski 203700");
 
-	const char carsChars[4][4] = { "", ">", "H>", "HH>" };
+	const char carsChars[4][4] = { "", "", "H", "HH" };
 	// cars
 	for (int i = 0; i < board->carsSize; ++i)
 	{
 		Car& c = board->cars[i];
-		move(c.roadNumber + UpperStatusAreaSize, c.x);
-		printw(carsChars[c.size]);
+		switch (board->roads[c.roadNumber].direction) {
+		case Left:
+			{
+			move(c.roadNumber + UpperStatusAreaSize, c.x);
+			StartPair(Window_Black);
+			printw("<");
+			EndPair(Window_Black);
+			printw(carsChars[c.size]);
+			break;
+			}
+		case Right:
+			{
+			move(c.roadNumber + UpperStatusAreaSize, c.x);
+			printw(carsChars[c.size]);
+			StartPair(Window_Black);
+			printw(">");
+			EndPair(Window_Black);
+			break;
+			}
+		}
 	}
 
 	move(board->frog.y + UpperStatusAreaSize, board->frog.x);
@@ -744,7 +762,6 @@ int main()
 }
 
 /*
-wyswitelanie aut
 referencje
 delete i new
 */
