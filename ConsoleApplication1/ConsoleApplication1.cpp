@@ -60,6 +60,12 @@ enum RoadType
 	Street = 1
 };
 
+enum Direction
+{
+	Left = 0,
+	Right = 1
+};
+
 // structs
 
 struct GameStateChange
@@ -85,6 +91,14 @@ struct GameOverMessageData
 	int points;
 };
 
+struct Car
+{
+	int size;
+	float speed; // # per second
+	float x; // in mili #
+	int roadNumber;
+};
+
 struct Frog
 {
 	int x, y;
@@ -94,6 +108,7 @@ struct Frog
 struct Road
 {
 	RoadType type;
+	Direction direction;
 };
 
 struct Home
@@ -110,9 +125,11 @@ struct Board
 	int width;
 	int score;
 	int time;
+	Car* cars;
+	int carsSize;
 };
 
-// window
+// Window
 
 void InitColor(int colorId, short r, short g, short b)
 {
@@ -155,7 +172,7 @@ WINDOW* InitWindow()
 		InitColor(FrogGreen, 153, 198, 142);
 		InitColor(RoadGray, 179, 179, 179);
 		InitColor(Brick, 192, 50, 72);
-		InitColor(FrogBlood, 19, 109, 21);
+		InitColor(FrogBlood, 120, 6, 6);
 		InitColor(Window, 0, 153, 255);
 
 		InitColorPair(GrassGreen_GrassGreen, GrassGreen, GrassGreen);
@@ -173,7 +190,7 @@ WINDOW* InitWindow()
 	return win;
 }
 
-// Start struct init
+// Start
 
 GameStateChange StartKeysHandler(GameState& self, int key)
 {
@@ -202,9 +219,29 @@ GameStateChange StartTimerHandler(GameState& self, int time)
 void StartDraw(GameState& self, WINDOW* win)
 {
 	clear();
-	printw("Start\n");
-	printw("s => start new game\n");
-	printw("q => quit program\n");
+	StartPair(FrogGreen_Black);
+	printw("    JJJ  U  U  M     M  PPP   I  N   N   GG         \n");
+	printw("      J  U  U  MM   MM  P  P  I  NN  N  G  G        \n");
+	printw("      J  U  U  M M M M  PPP   I  N N N  G           \n");
+	printw("      J  U  U  M  M  M  P     I  N  NN  G  GG       \n");
+	printw("    JJ    UU   M     M  P     I  N   N   GG         \n");
+	printw("                                                    \n");
+	printw("             FFF  RRR    OO    GG                   \n");
+	printw("             F    R  R  O  O  G  G                  \n");
+	printw("             FFF  RRR   O  O  G                     \n");
+	printw("             F    R R   O  O  G  GG                 \n");
+	printw("             F    R  R   OO    GG                   \n");
+	printw("                                                    \n");
+	printw("                   (.)_(.)                          \n");
+	printw("                _ (  ,_,  ) _                       \n");
+	printw("               / \\/`-----'\\/ \\                         \n");
+	printw("             __\\ ( (     ) ) /__                    \n");
+	printw("             )   /\\ \\._./ /\\   (                    \n");
+	printw("              )_/ /|\\   /|\\ \\_(                     \n");
+	printw("                                                    \n");
+	printw("             s => start new game                    \n");
+	printw("             q => quit program                      \n");
+	EndPair(FrogGreen_Black);
 	wrefresh(win);
 }
 
@@ -229,7 +266,7 @@ GameState CreateStart()
 	return start;
 }
 
-// Game struct init
+// Game
 
 bool IsFrogInHome(Frog frog, Home home)
 {
@@ -252,7 +289,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 		}
 		case 'w':
 		{
-			if (board->frog.y > 1)
+			if (board->frog.y > 0)
 			{
 				board->frog.y--;
 				if (IsFrogInHome(board->frog, board->home))
@@ -278,7 +315,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 		}
 		case 's':
 		{
-			if (board->frog.y < board->roadsSize)
+			if (board->frog.y < board->roadsSize - 1)
 			{
 				board->frog.y++;
 				if (IsFrogInHome(board->frog, board->home))
@@ -313,6 +350,41 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 {
 	Board* b = (Board*)self.data;
 	b->frog.skin = time / 1000 % 2;
+
+
+	// move cars
+	int deltaTime = time - b->time;
+	for (int i = 0; i < b->carsSize; ++i)
+	{
+		Car& c = b->cars[i];
+		switch (b->roads[b->cars[i].roadNumber].direction)
+		{
+		case Left:
+			{
+			c.x -= deltaTime * c.speed / 1000.0f;
+
+			if (c.x <= 0)
+			{
+				c.x = b->width - c.size + 1;
+			}
+			break;
+			}
+		case Right:
+			{
+			c.x += deltaTime * c.speed / 1000.0f;
+
+			if (c.x >= b->width)
+			{
+				c.x = 1.0f - c.size;
+			}
+			break;
+			}
+		}
+
+		
+		
+	}
+
 	b->time = time;
 
 	if (time > 10000)
@@ -345,6 +417,7 @@ void DrawGrass(int width)
 
 void GameDraw(GameState& self, WINDOW*win)
 {
+	const int UpperStatusAreaSize = 1;
 	clear();
 
 	Board* board = (Board*)self.data;
@@ -371,7 +444,16 @@ void GameDraw(GameState& self, WINDOW*win)
 
 	printw("Pawel Leczkowski 203700");
 
-	move(board->frog.y, board->frog.x);
+	const char carsChars[4][4] = { "", ">", "H>", "HH>" };
+	// cars
+	for (int i = 0; i < board->carsSize; ++i)
+	{
+		Car& c = board->cars[i];
+		move(c.roadNumber + UpperStatusAreaSize, c.x);
+		printw(carsChars[c.size]);
+	}
+
+	move(board->frog.y + UpperStatusAreaSize, board->frog.x);
 
 	StartPair(FrogGreen_Black);
 	if (board->frog.skin == 0)
@@ -384,7 +466,7 @@ void GameDraw(GameState& self, WINDOW*win)
 	}
 	EndPair(FrogGreen_Black);
 
-	move(board->home.y, board->home.x);
+	move(board->home.y + UpperStatusAreaSize, board->home.x);
 	StartPair(Black_Brick);
 	printw("H");
 	EndPair(Black_Brick);
@@ -415,11 +497,30 @@ void GameInit(GameState& self, void* initData)
 	board->roads[7].type = Street;
 	board->roads[8].type = Grass;
 	board->roads[9].type = Grass;
-	board->frog = { board->width / 2, board->roadsSize, 0 };
+
+	for (int i = 0; i < board->roadsSize / 2; ++i)
+	{
+		board->roads[i].direction = Right;
+	}
+
+	for (int i = board->roadsSize / 2; i < board->roadsSize; ++i)
+	{
+		board->roads[i].direction = Left;
+	}
+
+	board->frog = { board->width / 2, board->roadsSize - 1, 0 };
 	int homeY = rand() % board->width;
-	board->home = { homeY, 1 };
+	board->home = { homeY, 0 };
 	board->score = 200;
 	board->time = 0;
+
+	board->carsSize = 5;
+	board->cars = new Car[board->carsSize];
+	board->cars[0] = { 3, 4.0f, -2, 1};
+	board->cars[1] = { 2, 2.5f, -1, 2};
+	board->cars[2] = { 1, 2.7f, 0, 5};
+	board->cars[3] = { 2, 5.5f, -1, 6};
+	board->cars[4] = { 3, 8.0f, -2, 7};
 
 	self.data = board;
 }
@@ -435,7 +536,7 @@ GameState CreateGame()
 	return game;
 }
 
-// Game over struct init
+// Game over
 
 GameStateChange GameOverKeysHandler(GameState& self, int key)
 {
@@ -643,5 +744,7 @@ int main()
 }
 
 /*
-ascii art zaby ladnie na poczatku
+wyswitelanie aut
+referencje
+delete i new
 */
