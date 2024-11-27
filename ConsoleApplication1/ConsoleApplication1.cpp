@@ -80,7 +80,7 @@ struct GameState
 	GameStateChange(*keysHandler)(GameState&, int);
 	GameStateChange(*timerHandler)(GameState&, int);
 	void (*draw)(GameState&, WINDOW*);
-	void (*done)();
+	void (*done)(GameState&, void*);
 
 	void* data;
 };
@@ -245,9 +245,11 @@ void StartDraw(GameState& self, WINDOW* win)
 	wrefresh(win);
 }
 
-void StartDone()
+void StartDone(GameState& self, void* initData)
 {
-	
+	// uncomment if start has any initdata
+	//delete self.data;
+	//delete initData;
 }
 
 void StartInit(GameState& init, void* initData)
@@ -494,9 +496,10 @@ void GameDraw(GameState& self, WINDOW*win)
 	wrefresh(win);
 }
 
-void GameDone()
+void GameDone(GameState& self, void* initData)
 {
-	
+	//delete self.data;
+	delete initData;
 }
 
 void GameInit(GameState& self, void* initData)
@@ -657,9 +660,9 @@ void GameOverDraw(GameState& self, WINDOW*win)
 	wrefresh(win);
 }
 
-void GameOverDone()
+void GameOverDone(GameState& self, void* initData)
 {
-
+	delete initData;
 }
 
 void GameOverInit(GameState& self, void* initData)
@@ -734,7 +737,7 @@ int main()
 	while (true)
 	{
 		GameStateChange change = MainLoop(current, win);
-		current.done();
+		current.done(current, current.data);
 		switch (change.message)
 		{
 			case ChangeToStart:
@@ -760,7 +763,3 @@ int main()
 		current.init(current, change.data);
 	}
 }
-
-/*
-delete i new
-*/
