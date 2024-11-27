@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <conio.h>
 #include <string.h>
@@ -361,6 +362,15 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 	}
 }
 
+bool IsFrogHitted(Frog f, Car c)
+{
+	if (f.x == (int)round(c.x) && f.y == c.roadNumber)
+	{
+		return true;
+	}
+	return false;
+}
+
 GameStateChange GameTimerHandler(GameState& self, int time)
 {
 	Board* b = (Board*)self.data;
@@ -374,30 +384,35 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 		Car& c = b->cars[i];
 		switch (b->roads[b->cars[i].roadNumber].direction)
 		{
-		case Left:
+			case Left:
 			{
-			c.x -= deltaTime * c.speed / 1000.0f;
+				c.x -= deltaTime * c.speed / 1000.0f;
 
-			if (c.x <= 0)
-			{
-				c.x = b->width - c.size + 1;
+				if (c.x <= 0)
+				{
+					c.x = b->width - c.size + 1;
+				}
+				break;
 			}
-			break;
-			}
-		case Right:
+			case Right:
 			{
-			c.x += deltaTime * c.speed / 1000.0f;
+				c.x += deltaTime * c.speed / 1000.0f;
 
-			if (c.x >= b->width)
-			{
-				c.x = 1.0f - c.size;
-			}
-			break;
+				if (c.x >= b->width)
+				{
+					c.x = 1.0f - c.size;
+				}
+				break;
 			}
 		}
 
-		
-		
+		b->frog.x;
+
+		if (IsFrogHitted(b->frog, c))
+		{
+			GameOverMessageData* data = new GameOverMessageData{ false, 0 };
+			return { ChangeToGameOver, data };
+		}
 	}
 
 	b->time = time;
@@ -666,7 +681,8 @@ void GameOverDraw(GameState& self, WINDOW*win)
 		{
 			printw("\n");
 			printw("                      Enter name:                      \n");
-			printw("                 '>' => stop typing               \n");
+			printw("                    '>' => enter                  \n");
+			printw("                    '<' => backspace              \n");
 			printw("                       %s", data->str);
 
 			if (!data->enter)
