@@ -717,6 +717,20 @@ void GameOverDraw(GameState& self, WINDOW*win)
 		StartPair(FrogBlood_Black); printw("         ',"); EndPair(FrogBlood_Black); printw("/   \\,'                                     \n");
 		StartPair(FrogBlood_Black); printw("           '-~-'"); EndPair(FrogBlood_Black); printw("                                       \n");
 		StartPair(FrogBlood_FrogBlood); printw("-------------------------"); EndPair(FrogBlood_FrogBlood); StartPair(RoadGray_RoadGray); printw("------------------------------\n"); EndPair(RoadGray_RoadGray);
+
+
+		printw("                      Best scores:                     \n");
+		printw("                  +------------+-----+                  ");
+
+		for (int i = 0; i < 5; ++i)
+		{
+			printw("                  | % 10s | %03d |                  ", data->players[i].name, data->players[i].points);
+			printw("                  +------------+-----+                  ");
+		}
+		printw("\n");
+
+
+
 		printw("                 q => quit to main menu                \n");
 	}
 	wrefresh(win);
