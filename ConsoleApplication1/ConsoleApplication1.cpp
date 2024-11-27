@@ -20,6 +20,7 @@ enum ColorPairs
 	Window_Black = 8,
 	Brick_Black = 9,
 	GrassGreen_Black = 10,
+	Red_Black = 10,
 };
 
 enum Colors
@@ -130,6 +131,12 @@ struct Home
 	int x, y;
 };
 
+struct Stork
+{
+	int x, y;
+	float distance, speed;// works same as cars speed
+};
+
 struct Building
 {
 	int x, roadNumber;
@@ -148,6 +155,7 @@ struct Board
 	int carsSize;
 	Building* buildings;
 	int buildingsSize;
+	Stork stork;
 };
 
 // Window
@@ -206,6 +214,7 @@ WINDOW* InitWindow()
 		InitColorPair(Window_Black, Window, Black);
 		InitColorPair(Brick_Black, Brick, Black);
 		InitColorPair(GrassGreen_Black, GrassGreen, Black);
+		InitColorPair(Red_Black, Red, Black);
 	}
 
 	return win;
@@ -412,7 +421,6 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 	Board* b = (Board*)self.data;
 	b->frog.skin = time / 1000 % 2;
 
-
 	// move cars
 	int deltaTime = time - b->time;
 	for (int i = 0; i < b->carsSize; ++i)
@@ -451,9 +459,62 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 		}
 	}
 
+	// stork fly
+	b->stork.distance += deltaTime * b->stork.speed / 1000.0f;
+	if (b->stork.distance > 1)
+	{
+		b->stork.distance--;
+		int deltaX = b->stork.x - b->frog.x;
+		int deltaY = b->stork.y - b->frog.y;
+
+		if (deltaX == 0 && deltaY > 0)
+		{
+			b->stork.y--;
+		}
+		else if (deltaX == 0 && deltaY < 0)
+		{
+			b->stork.y++;
+		}
+		else if (deltaY == 0 && deltaX > 0)
+		{
+			b->stork.x--;
+		}
+		else if (deltaY == 0 && deltaX < 0)
+		{
+			b->stork.x++;
+		}
+		else if (deltaX > 0 && deltaY > 0)
+		{
+			b->stork.x--;
+			b->stork.y--;
+		}
+		else if (deltaX < 0 && deltaY > 0)
+		{
+			b->stork.x++;
+			b->stork.y--;
+		}
+		else if (deltaX > 0 && deltaY < 0)
+		{
+			b->stork.x--;
+			b->stork.y++;
+		}
+		else if (deltaX < 0 && deltaY < 0)
+		{
+			b->stork.x++;
+			b->stork.y++;
+		}
+
+		if (b->stork.x == b->frog.x && b->stork.y == b->frog.y)
+		{
+			GameOverMessageData* data = new GameOverMessageData{ false, 0 };
+			return { ChangeToGameOver, data };
+		}
+	}
+
+
 	b->time = time;
 
-	if (time > 10000)
+	if (time > 100000)
 	{
 		GameOverMessageData* data = new GameOverMessageData{ false, 0 };
 		return { ChangeToGameOver, data };
@@ -564,6 +625,11 @@ void GameDraw(GameState& self, WINDOW*win)
 
 	DrawBuildings(UpperStatusAreaSize, board->buildings, board->buildingsSize);
 
+	StartPair(Red_Black);
+	move(board->stork.y + UpperStatusAreaSize, board->stork.x);
+	printw("S");
+	EndPair(Red_Black);
+
 	move(board->home.y + UpperStatusAreaSize, board->home.x);
 	StartPair(Black_Brick);
 	printw("H");
@@ -628,6 +694,8 @@ void GameInit(GameState& self, void* initData)
 	board->buildings[2] = { 5, 4 };
 	board->buildings[3] = { 4, 4 };
 	board->buildings[4] = { 5, 8 };
+
+	board->stork = {0, 0, 0.0f, 1.0f};
 
 
 	self.data = board;
