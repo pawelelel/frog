@@ -97,6 +97,11 @@ struct GameOverMessageData
 	bool won;
 	int points;
 	Player players[5];
+
+	// for keyboard input
+	char str[11];
+	bool enter;
+	int index;
 };
 
 struct Car
@@ -569,17 +574,54 @@ GameState CreateGame()
 
 GameStateChange GameOverKeysHandler(GameState& self, int key)
 {
+	GameOverMessageData* data = (GameOverMessageData*)self.data;
+
+	if ((!data->won || !(data->players[4].points < data->points)) && key == 'q')
+	{
+		return { ChangeToStart, NULL };
+	}
+
 	switch (key)
 	{
 		case 'q':
 		{
-			return { ChangeToStart, NULL };
+			if (data->enter && strcmp(data->str, "") != 0)
+			{
+				return { ChangeToStart, NULL };
+			}
+			break;
 		}
-		default:
+		case '>':
 		{
+			if (data->str[0] != '\0')
+			{
+				data->enter = true;
+			}
+			return { ChangeNoChange, NULL };
+		}
+		case '<':
+		{
+			data->str[--data->index] = '\0';
+
+				if (data->index < 0)
+				{
+					data->index = 0;
+				}
+
 			return { ChangeNoChange, NULL };
 		}
 	}
+
+	if (key >= 'a' && key <= 'z')
+	{
+		if (data->index < 10)
+		{
+			data->str[data->index] = key;
+			data->index++;
+			return { ChangeNoChange, NULL };
+		}
+	}
+	return { ChangeNoChange, NULL };
 }
 
 GameStateChange GameOverTimerHandler(GameState& self, int time)
@@ -619,23 +661,35 @@ void GameOverDraw(GameState& self, WINDOW*win)
 		StartPair(Brick_Black); printw("       |  |      |        "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(")_/ /|\\   /|\\ \\_("); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("     |      \n"); EndPair(Brick_Black);
 		StartPair(GrassGreen_Black); printw("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"); EndPair(GrassGreen_Black);
 		printw("                    Your score: %d                     \n", data->points);
-		printw("\n");
-		printw("                      Enter name:                      \n");
-		printw("                       Nam_                            \n");
-		printw("                      Best scores:                     \n");
-		printw("                  +------------+----+                  \n");
-		printw("                  |     You    | 65 |                  \n");
-		printw("                  +------------+----+                  \n");
-		printw("                  | Name 2 cos | 50 |                  \n");
-		printw("                  +------------+----+                  \n");
-		printw("                  | Name 3 cos | 30 |                  \n");
-		printw("                  +------------+----+                  \n");
-		printw("                  | Name 4 cos | 20 |                  \n");
-		printw("                  +------------+----+                  \n");
-		printw("                  | Name 5 cos | 20 |                  \n");
-		printw("                  +------------+----+                  \n");
-		printw("\n");
-		printw("                 q => quit to main menu                \n");
+
+		if (data->players[4].points < data->points)
+		{
+			printw("\n");
+			printw("                      Enter name:                      \n");
+			printw("                 '>' => stop typing               \n");
+			printw("                       %s", data->str);
+
+			if (!data->enter)
+			{
+				printw("_");
+			}
+			printw("\n");
+		}
+			printw("                      Best scores:                     \n");
+			printw("                  +------------+-----+                  ");
+
+			for (int i = 0; i < 5; ++i)
+			{
+				printw("                  | % 10s | %03d |                  ", data->players[i].name, data->players[i].points);
+				printw("                  +------------+-----+                  ");
+			}
+			printw("\n");
+		
+
+		if (data->enter || !(data->players[4].points < data->points))
+		{
+			printw("                 q => quit to main menu                \n");
+		}
 	}
 	else
 	{
@@ -670,24 +724,95 @@ void GameOverDraw(GameState& self, WINDOW*win)
 
 void GameOverDone(GameState& self, void* initData)
 {
+	GameOverMessageData* data = (GameOverMessageData*)initData;
+	FILE* file;
+	file = fopen("best.txt", "w");
+
+	for (int i = 0; i < 5; ++i)
+	{
+		if (strcmp(data->players[i].name, "---") == 0)
+		{
+			fprintf(file, "%s\n", "(null)");
+		}
+		else
+		{
+			if (strcmp(data->players[i].name, "You") == 0)
+			{
+				fprintf(file, "%s\n", data->str);
+				fprintf(file, "%d\n", data->points);
+			}
+			else
+			{
+				fprintf(file, "%s\n", data->players[i].name);
+				fprintf(file, "%d\n", data->players[i].points);
+			}
+		}
+	}
+
+	fclose(file);
+
 	delete initData;
+}
+
+void insertYou(GameOverMessageData* data)
+{
+	for (int i = 5 - 1; i >= 0; --i)
+	{
+		if (data->players[i].points >= data->points)
+		{
+			data->players[i + 1].points = 0;
+			strcpy(data->players[i + 1].name, "You");
+			return;
+		}
+	}
+	data->players[0].points = 0;
+	strcpy(data->players[0].name, "You");
 }
 
 void GameOverInit(GameState& self, void* initData)
 {
 	GameOverMessageData* data = (GameOverMessageData*)initData;
+	data->enter = false;
+	strcpy(data->str, "\0");
+	data->index = 0;
 	self.data = data;
 
 	FILE* file;
 	file = fopen("best.txt", "r");
 	if (file == NULL)
 	{
+		// if file do not exist
 		for (int i = 0; i < 5; ++i)
 		{
-			strcpy(data->players[i].name, "\0");
+			//strcpy(data->players[i].name, "1234567890\0");
+			strcpy(data->players[i].name, "---\0");
 			data->players[i].points = 0;
 		}
 	}
+	else
+	{
+		//if file exists
+		// read values
+
+		for (int i = 0; i < 5; ++i)
+		{
+			int a = fscanf(file, "%s\n", &data->players[i].name);
+			if (strcmp(data->players[i].name, "(null)") == 0 || a != 1)
+			{
+				strcpy(data->players[i].name, "---\0");
+			}
+			a = fscanf(file, "%d\n", &data->players[i].points);
+			if (a != 1)
+			{
+				data->players[i].points = 0;
+			}
+		}
+
+		fclose(file);
+	}
+
+	insertYou(data);
+	printw("");
 }
 
 GameState CreateGameOver()
