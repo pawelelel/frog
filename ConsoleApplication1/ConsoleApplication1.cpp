@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <conio.h>
+#include <string.h>
 #include <time.h>
 #include <stdlib.h>
 #include <curses.h>
@@ -85,10 +86,17 @@ struct GameState
 	void* data;
 };
 
+struct Player
+{
+	char name[11];
+	int points;
+};
+
 struct GameOverMessageData
 {
 	bool won;
 	int points;
+	Player players[5];
 };
 
 struct Car
@@ -669,6 +677,17 @@ void GameOverInit(GameState& self, void* initData)
 {
 	GameOverMessageData* data = (GameOverMessageData*)initData;
 	self.data = data;
+
+	FILE* file;
+	file = fopen("best.txt", "r");
+	if (file == NULL)
+	{
+		for (int i = 0; i < 5; ++i)
+		{
+			strcpy(data->players[i].name, "\0");
+			data->players[i].points = 0;
+		}
+	}
 }
 
 GameState CreateGameOver()
