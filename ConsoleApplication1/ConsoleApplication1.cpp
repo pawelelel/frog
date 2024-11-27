@@ -90,13 +90,13 @@ struct GameState
 struct Player
 {
 	char name[11];
-	int points;
+	int score;
 };
 
 struct GameOverMessageData
 {
 	bool won;
-	int points;
+	int score;
 	Player players[5];
 
 	// for keyboard input
@@ -591,7 +591,7 @@ GameStateChange GameOverKeysHandler(GameState& self, int key)
 {
 	GameOverMessageData* data = (GameOverMessageData*)self.data;
 
-	if ((!data->won || !(data->players[4].points < data->points)) && key == 'q')
+	if ((!data->won || !(data->players[4].score < data->score)) && key == 'q')
 	{
 		return { ChangeToStart, NULL };
 	}
@@ -616,12 +616,16 @@ GameStateChange GameOverKeysHandler(GameState& self, int key)
 		}
 		case '<':
 		{
-			data->str[--data->index] = '\0';
-
-				if (data->index < 0)
+				if (!data->enter)
 				{
-					data->index = 0;
+					data->str[--data->index] = '\0';
+
+					if (data->index < 0)
+					{
+						data->index = 0;
+					}
 				}
+			
 
 			return { ChangeNoChange, NULL };
 		}
@@ -675,9 +679,9 @@ void GameOverDraw(GameState& self, WINDOW*win)
 		StartPair(Brick_Black); printw("       |  |      |       "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(")   /\\ \\._./ /\\   ("); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("    |     \n"); EndPair(Brick_Black);
 		StartPair(Brick_Black); printw("       |  |      |        "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(")_/ /|\\   /|\\ \\_("); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("     |      \n"); EndPair(Brick_Black);
 		StartPair(GrassGreen_Black); printw("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"); EndPair(GrassGreen_Black);
-		printw("                    Your score: %d                     \n", data->points);
+		printw("                    Your score: %d                     \n", data->score);
 
-		if (data->players[4].points < data->points)
+		if (data->players[4].score < data->score)
 		{
 			printw("\n");
 			printw("                      Enter name:                      \n");
@@ -696,13 +700,13 @@ void GameOverDraw(GameState& self, WINDOW*win)
 
 			for (int i = 0; i < 5; ++i)
 			{
-				printw("                  | % 10s | %03d |                  ", data->players[i].name, data->players[i].points);
+				printw("                  | % 10s | %03d |                  ", data->players[i].name, data->players[i].score);
 				printw("                  +------------+-----+                  ");
 			}
 			printw("\n");
 		
 
-		if (data->enter || !(data->players[4].points < data->points))
+		if (data->enter || !(data->players[4].score < data->score))
 		{
 			printw("                 q => quit to main menu                \n");
 		}
@@ -740,7 +744,7 @@ void GameOverDraw(GameState& self, WINDOW*win)
 
 		for (int i = 0; i < 5; ++i)
 		{
-			printw("                  | % 10s | %03d |                  ", data->players[i].name, data->players[i].points);
+			printw("                  | % 10s | %03d |                  ", data->players[i].name, data->players[i].score);
 			printw("                  +------------+-----+                  ");
 		}
 		printw("\n");
@@ -769,12 +773,12 @@ void GameOverDone(GameState& self, void* initData)
 			if (strcmp(data->players[i].name, "You") == 0)
 			{
 				fprintf(file, "%s\n", data->str);
-				fprintf(file, "%d\n", data->points);
+				fprintf(file, "%d\n", data->score);
 			}
 			else
 			{
 				fprintf(file, "%s\n", data->players[i].name);
-				fprintf(file, "%d\n", data->players[i].points);
+				fprintf(file, "%d\n", data->players[i].score);
 			}
 		}
 	}
@@ -788,14 +792,14 @@ void insertYou(GameOverMessageData* data)
 {
 	for (int i = 5 - 1; i >= 0; --i)
 	{
-		if (data->players[i].points >= data->points)
+		if (data->players[i].score >= data->score)
 		{
-			data->players[i + 1].points = 0;
+			data->players[i + 1].score = 0;
 			strcpy(data->players[i + 1].name, "You");
 			return;
 		}
 	}
-	data->players[0].points = 0;
+	data->players[0].score = 0;
 	strcpy(data->players[0].name, "You");
 }
 
@@ -816,7 +820,7 @@ void GameOverInit(GameState& self, void* initData)
 		{
 			//strcpy(data->players[i].name, "1234567890\0");
 			strcpy(data->players[i].name, "---\0");
-			data->players[i].points = 0;
+			data->players[i].score = 0;
 		}
 	}
 	else
@@ -831,10 +835,10 @@ void GameOverInit(GameState& self, void* initData)
 			{
 				strcpy(data->players[i].name, "---\0");
 			}
-			a = fscanf(file, "%d\n", &data->players[i].points);
+			a = fscanf(file, "%d\n", &data->players[i].score);
 			if (a != 1)
 			{
-				data->players[i].points = 0;
+				data->players[i].score = 0;
 			}
 		}
 
