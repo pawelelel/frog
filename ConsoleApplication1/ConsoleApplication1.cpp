@@ -130,6 +130,11 @@ struct Home
 	int x, y;
 };
 
+struct Building
+{
+	int x, roadNumber;
+};
+
 struct Board
 {
 	Frog frog;
@@ -141,6 +146,8 @@ struct Board
 	int time;
 	Car* cars;
 	int carsSize;
+	Building* buildings;
+	int buildingsSize;
 };
 
 // Window
@@ -293,6 +300,35 @@ bool IsFrogInHome(Frog frog, Home home)
 	return false;
 }
 
+bool CanFrogJump(int newX, int newY, Board* b)
+{
+	if (newY < 0)
+	{
+		return false;
+	}
+	if (newX < 0)
+	{
+		return false;
+	}
+	if (newY > b->roadsSize - 1)
+	{
+		return false;
+	}
+	if (newX > b->width - 1)
+	{
+		return false;
+	}
+
+	for (int i = 0; i < b->buildingsSize; ++i)
+	{
+		if (newX == b->buildings[i].x && newY == b->buildings[i].roadNumber)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 GameStateChange GameKeysHandler(GameState& self, int key)
 {
 	Board* board = (Board*)self.data;
@@ -305,7 +341,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 		}
 		case 'w':
 		{
-			if (board->frog.y > 0)
+			if (CanFrogJump(board->frog.x, board->frog.y - 1, board))
 			{
 				board->frog.y--;
 				if (IsFrogInHome(board->frog, board->home))
@@ -318,7 +354,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 		}
 		case 'a':
 		{
-			if (board->frog.x > 0)
+			if (CanFrogJump(board->frog.x - 1, board->frog.y, board))
 			{
 				board->frog.x--;
 				if (IsFrogInHome(board->frog, board->home))
@@ -331,7 +367,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 		}
 		case 's':
 		{
-			if (board->frog.y < board->roadsSize - 1)
+			if (CanFrogJump(board->frog.x, board->frog.y + 1, board))
 			{
 				board->frog.y++;
 				if (IsFrogInHome(board->frog, board->home))
@@ -344,7 +380,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 		}
 		case 'd':
 		{
-			if (board->frog.x < board->width - 1)
+			if (CanFrogJump(board->frog.x + 1, board->frog.y, board))
 			{
 				board->frog.x++;
 				if (IsFrogInHome(board->frog, board->home))
@@ -445,6 +481,18 @@ void DrawGrass(int width)
 	EndPair(GrassGreen_GrassGreen);
 }
 
+void DrawBuildings(int upperStatusAreaSize, Building* buildings, int buildingsSize)
+{
+	for (int i = 0; i < buildingsSize; ++i)
+	{
+		Building b = buildings[i];
+		move(b.roadNumber + upperStatusAreaSize, b.x);
+		StartPair(Brick_Black);
+		printw("A");
+		EndPair(Brick_Black);
+	}
+}
+
 void GameDraw(GameState& self, WINDOW*win)
 {
 	const int UpperStatusAreaSize = 1;
@@ -514,6 +562,8 @@ void GameDraw(GameState& self, WINDOW*win)
 	}
 	EndPair(FrogGreen_Black);
 
+	DrawBuildings(UpperStatusAreaSize, board->buildings, board->buildingsSize);
+
 	move(board->home.y + UpperStatusAreaSize, board->home.x);
 	StartPair(Black_Brick);
 	printw("H");
@@ -570,6 +620,15 @@ void GameInit(GameState& self, void* initData)
 	board->cars[2] = { 1, 2.7f, 0, 5};
 	board->cars[3] = { 2, 5.5f, -1, 6};
 	board->cars[4] = { 3, 8.0f, -1, 7};
+
+	board->buildingsSize = 5;
+	board->buildings = new Building[board->buildingsSize];
+	board->buildings[0] = { 5, 3 };
+	board->buildings[1] = { 1, 3 };
+	board->buildings[2] = { 5, 4 };
+	board->buildings[3] = { 4, 4 };
+	board->buildings[4] = { 5, 8 };
+
 
 	self.data = board;
 }
