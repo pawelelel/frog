@@ -135,6 +135,9 @@ struct Frog
 {
 	int x, y;
 	int skin;
+
+	Car* car;
+	bool onCar;
 };
 
 struct Road
@@ -370,6 +373,8 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 		{
 			if (CanFrogJump(board->frog.x, board->frog.y - 1, board))
 			{
+				board->frog.onCar = false;
+				board->frog.car = NULL;
 				board->frog.y--;
 				if (IsFrogInHome(board->frog, board->home))
 				{
@@ -396,6 +401,8 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 		{
 			if (CanFrogJump(board->frog.x, board->frog.y + 1, board))
 			{
+				board->frog.onCar = false;
+				board->frog.car = NULL;
 				board->frog.y++;
 				if (IsFrogInHome(board->frog, board->home))
 				{
@@ -427,7 +434,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 
 bool IsFrogHitted(Frog f, Car c)
 {
-	if (f.x == (int)round(c.x) && f.y == c.roadNumber)
+	if (c.type == Bad && f.x == (int)round(c.x) && f.y == c.roadNumber)
 	{
 		return true;
 	}
@@ -439,6 +446,12 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 	Board* b = (Board*)self.data;
 	b->frog.skin = time / 1000 % 2;
 
+	if (b->frog.onCar)
+	{
+		b->frog.x = b->frog.car->x;
+		b->frog.y = b->frog.car->roadNumber;
+	}
+
 	// move cars
 	int deltaTime = time - b->time;
 	for (int i = 0; i < b->carsSize; ++i)
@@ -448,6 +461,12 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 		{
 			case Left:
 			{
+				if (c.type == Taxi && (int)round(c.x) - 1 == b->frog.x && c.roadNumber == b->frog.y)
+				{
+					b->frog.car = &c;
+					b->frog.onCar = true;
+				}
+
 				if (c.type == Friendly && (int)round(c.x) - 1 == b->frog.x && c.roadNumber == b->frog.y)
 				{
 					break;
@@ -471,10 +490,17 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 						c.roadNumber = streets[rand()%5];
 					}
 				}
+
 				break;
 			}
 			case Right:
 			{
+				if (c.type == Taxi && (int)round(c.x) + 1 == b->frog.x && c.roadNumber == b->frog.y)
+				{
+					b->frog.car = &c;
+					b->frog.onCar = true;
+				}
+
 				if (c.type == Friendly && (int)round(c.x) + 1 == b->frog.x && c.roadNumber == b->frog.y)
 				{
 					break;
@@ -840,6 +866,10 @@ void GameInit(GameState& self, void* initData)
 	}
 
 	board->frog = { board->width / 2, board->roadsSize - 1, 0 };
+	board->frog.car = NULL;
+	board->frog.onCar = false;
+
+
 	int homeY = rand() % board->width;
 	board->home = { homeY, 0 };
 	board->score = 200;
