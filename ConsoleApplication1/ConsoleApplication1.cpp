@@ -69,6 +69,13 @@ enum Direction
 	Right = 1
 };
 
+enum Speed
+{
+	Normal = 0,
+	Slow = 1,
+	Fast = 2
+};
+
 // structs
 
 struct GameStateChange
@@ -112,6 +119,7 @@ struct Car
 	float speed; // # per second
 	float x; // in mili #
 	int roadNumber;
+	Speed speedType;
 };
 
 struct Frog
@@ -450,6 +458,37 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 			}
 		}
 
+		// speed up cars
+		int speedChange = rand() % 100;
+		float speedUpFactor = 5.0f;
+
+		if (c.speedType == Normal)
+		{ // change car speed
+			if (speedChange < 10) // 10% of chances
+			{ // speed up
+				c.speed *= speedUpFactor;
+				c.speedType = Fast;
+			}
+			else if (speedChange < 10) // 10% of chances
+			{ // slow down
+				c.speed *= 1.0f / speedUpFactor;
+				c.speedType = Slow;
+			}
+		}
+		else if(speedChange < 1) // 1% of chances
+		{ // change it back
+			if (c.speedType == Slow)
+			{ // speed up
+				c.speed *= speedUpFactor;
+			}
+			else if (c.speedType == Fast)
+			{ // slow down
+				c.speed *= 1.0f / speedUpFactor;
+			}
+			c.speedType = Normal;
+		}
+		
+
 		b->frog.x;
 
 		if (IsFrogHitted(b->frog, c))
@@ -635,8 +674,6 @@ void GameDraw(GameState& self, WINDOW*win)
 	printw("H");
 	EndPair(Black_Brick);
 
-
-
 	wrefresh(win);
 }
 
@@ -681,11 +718,11 @@ void GameInit(GameState& self, void* initData)
 
 	board->carsSize = 5;
 	board->cars = new Car[board->carsSize];
-	board->cars[0] = { 3, 4.0f, -1, 1};
-	board->cars[1] = { 2, 2.5f, -1, 2};
-	board->cars[2] = { 1, 2.7f, 0, 5};
-	board->cars[3] = { 2, 5.5f, -1, 6};
-	board->cars[4] = { 3, 8.0f, -1, 7};
+	board->cars[0] = { 3, 4.0f, -1, 1, Normal};
+	board->cars[1] = { 2, 2.5f, -1, 2, Normal };
+	board->cars[2] = { 1, 2.7f, 0, 5, Normal };
+	board->cars[3] = { 2, 5.5f, -1, 6, Normal };
+	board->cars[4] = { 3, 8.0f, -1, 7, Normal };
 
 	board->buildingsSize = 5;
 	board->buildings = new Building[board->buildingsSize];
