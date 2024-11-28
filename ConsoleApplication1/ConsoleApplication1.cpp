@@ -434,7 +434,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 
 bool IsFrogHitted(Frog f, Car c)
 {
-	if (c.type == Bad && f.x == (int)round(c.x) && f.y == c.roadNumber)
+	if (c.type == Bad && !f.onCar && f.x == (int)round(c.x) && f.y == c.roadNumber)
 	{
 		return true;
 	}
