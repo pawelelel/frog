@@ -209,8 +209,6 @@ WINDOW* InitWindow()
 {
 	// curses init
 	WINDOW*win = initscr();
-	int col = 56, row = 45;
-	resize_term(row, col);
 	curs_set(0);
 
 	// colors init
@@ -272,27 +270,27 @@ void StartDraw(GameState& self, WINDOW* win)
 {
 	clear();
 	StartPair(FrogGreen_Black);
-	printw("    JJJ  U  U  M     M  PPP   I  N   N   GG         \n");
-	printw("      J  U  U  MM   MM  P  P  I  NN  N  G  G        \n");
-	printw("      J  U  U  M M M M  PPP   I  N N N  G           \n");
-	printw("      J  U  U  M  M  M  P     I  N  NN  G  GG       \n");
-	printw("    JJ    UU   M     M  P     I  N   N   GG         \n");
+	printw("     JJJ  U  U  M     M  PPP   I  N   N   GG        \n");
+	printw("       J  U  U  MM   MM  P  P  I  NN  N  G  G       \n");
+	printw("       J  U  U  M M M M  PPP   I  N N N  G          \n");
+	printw("       J  U  U  M  M  M  P     I  N  NN  G  GG      \n");
+	printw("     JJ    UU   M     M  P     I  N   N   GG        \n");
 	printw("                                                    \n");
-	printw("             FFF  RRR    OO    GG                   \n");
-	printw("             F    R  R  O  O  G  G                  \n");
-	printw("             FFF  RRR   O  O  G                     \n");
-	printw("             F    R R   O  O  G  GG                 \n");
-	printw("             F    R  R   OO    GG                   \n");
+	printw("              FFF  RRR    OO    GG                  \n");
+	printw("              F    R  R  O  O  G  G                 \n");
+	printw("              FFF  RRR   O  O  G                    \n");
+	printw("              F    R R   O  O  G  GG                \n");
+	printw("              F    R  R   OO    GG                  \n");
 	printw("                                                    \n");
-	printw("                   (.)_(.)                          \n");
-	printw("                _ (  ,_,  ) _                       \n");
-	printw("               / \\/`-----'\\/ \\                         \n");
-	printw("             __\\ ( (     ) ) /__                    \n");
-	printw("             )   /\\ \\._./ /\\   (                    \n");
-	printw("              )_/ /|\\   /|\\ \\_(                     \n");
+	printw("                     (.)_(.)                        \n");
+	printw("                  _ (  ,_,  ) _                     \n");
+	printw("                 / \\/`-----'\\/ \\                       \n");
+	printw("               __\\ ( (     ) ) /__                  \n");
+	printw("               )   /\\ \\._./ /\\   (                  \n");
+	printw("                )_/ /|\\   /|\\ \\_(                   \n");
 	printw("                                                    \n");
-	printw("             s => start new game                    \n");
-	printw("             q => quit program                      \n");
+	printw("               s => start new game                  \n");
+	printw("               q => quit program                    \n");
 	EndPair(FrogGreen_Black);
 	wrefresh(win);
 }
@@ -306,7 +304,8 @@ void StartDone(GameState& self, void* initData)
 
 void StartInit(GameState& init, void* initData)
 {
-	
+	int col = 53, row = 23;
+	resize_term(row, col);
 }
 
 GameState CreateStart()
@@ -865,7 +864,7 @@ void GameDone(GameState& self, void* initData)
 void GameInit(GameState& self, void* initData)
 {
 	Board* board = new Board;
-	board->width = 50;
+	board->width = 100;
 	board->roadsSize = 10;
 	board->roads = new Road[board->roadsSize];
 	board->roads[0].type = Grass;
@@ -918,6 +917,8 @@ void GameInit(GameState& self, void* initData)
 
 	board->stork = {0, 0, 0.0f, 1.0f};
 
+	int col = board->width + 1, row = board->roadsSize + 2;
+	resize_term(row, col);
 
 	self.data = board;
 }
@@ -1153,6 +1154,10 @@ void insertYou(GameOverMessageData* data)
 
 void GameOverInit(GameState& self, void* initData)
 {
+	int col = 56, row = 45;
+	resize_term(row, col);
+
+
 	GameOverMessageData* data = (GameOverMessageData*)initData;
 	data->enter = false;
 	strcpy(data->str, "\0");
@@ -1250,6 +1255,7 @@ GameStateChange MainLoop(GameState& current, WINDOW* win)
 int main()
 {
 	srand(time(NULL));
+	WINDOW* win = InitWindow();
 
 	GameState Start = CreateStart();
 	GameState Game = CreateGame();
@@ -1257,8 +1263,6 @@ int main()
 
 	GameState current = Start;
 	current.init(current, NULL);
-
-	WINDOW* win = InitWindow();
 	
 	while (true)
 	{
@@ -1287,5 +1291,10 @@ int main()
 			}
 		}
 		current.init(current, change.data);
+
+
+		int x, y;
+		getmaxyx(win, y, x);
+		printw("");
 	}
 }
