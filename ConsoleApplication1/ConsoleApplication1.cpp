@@ -170,7 +170,8 @@ struct Board
 	int roadsSize;
 	int width;
 	int score;
-	int time;
+	int time; // in miliseconds
+	int maxTime;// in seconds
 	Car* cars;
 	int carsSize;
 	Building* buildings;
@@ -376,8 +377,15 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 				board->frog.onCar = false;
 				board->frog.car = NULL;
 				board->frog.y--;
+
+				if (board->roads[board->frog.y].type == Street)
+				{
+					board->score++;
+				}
+
 				if (IsFrogInHome(board->frog, board->home))
 				{
+					board->score += board->maxTime - board->time / 1000;
 					GameOverMessageData* data = new GameOverMessageData{ true, board->score };
 					return { ChangeToGameOver, data};
 				}
@@ -391,6 +399,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 				board->frog.x--;
 				if (IsFrogInHome(board->frog, board->home))
 				{
+					board->score += board->maxTime - board->time / 1000;
 					GameOverMessageData* data = new GameOverMessageData{ true, board->score };
 					return { ChangeToGameOver, data };
 				}
@@ -404,8 +413,15 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 				board->frog.onCar = false;
 				board->frog.car = NULL;
 				board->frog.y++;
+
+				if (board->roads[board->frog.y].type == Street)
+				{
+					board->score++;
+				}
+
 				if (IsFrogInHome(board->frog, board->home))
 				{
+					board->score += board->maxTime - board->time / 1000;
 					GameOverMessageData* data = new GameOverMessageData{ true, board->score };
 					return { ChangeToGameOver, data };
 				}
@@ -419,6 +435,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 				board->frog.x++;
 				if (IsFrogInHome(board->frog, board->home))
 				{
+					board->score += board->maxTime - board->time / 1000;
 					GameOverMessageData* data = new GameOverMessageData{ true, board->score };
 					return { ChangeToGameOver, data };
 				}
@@ -464,6 +481,10 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 				if (c.type == Taxi && (int)round(c.x) - 1 == b->frog.x && c.roadNumber == b->frog.y)
 				{
 					b->frog.car = &c;
+					if (!b->frog.onCar)
+					{
+						b->score++;
+					}
 					b->frog.onCar = true;
 				}
 
@@ -498,6 +519,10 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 				if (c.type == Taxi && (int)round(c.x) + 1 == b->frog.x && c.roadNumber == b->frog.y)
 				{
 					b->frog.car = &c;
+					if (!b->frog.onCar)
+					{
+						b->score++;
+					}
 					b->frog.onCar = true;
 				}
 
@@ -620,10 +645,9 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 		}
 	}
 
-
 	b->time = time;
 
-	if (time > 100000)
+	if (time > b->maxTime * 1000)
 	{
 		GameOverMessageData* data = new GameOverMessageData{ false, 0 };
 		return { ChangeToGameOver, data };
@@ -872,8 +896,9 @@ void GameInit(GameState& self, void* initData)
 
 	int homeY = rand() % board->width;
 	board->home = { homeY, 0 };
-	board->score = 200;
+	board->score = 0;
 	board->time = 0;
+	board->maxTime = 100;
 
 	board->carsSize = 5;
 	board->cars = new Car[board->carsSize];
