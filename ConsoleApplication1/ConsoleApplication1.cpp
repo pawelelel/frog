@@ -21,6 +21,7 @@ enum ColorPairs
 	Brick_Black = 9,
 	GrassGreen_Black = 10,
 	Red_Black = 10,
+	Green_Black = 11,
 };
 
 enum Colors
@@ -76,6 +77,13 @@ enum Speed
 	Fast = 2
 };
 
+enum CarType
+{
+	Friendly = 0,
+	Bad = 1,
+	Taxi = 2
+};
+
 // structs
 
 struct GameStateChange
@@ -120,6 +128,7 @@ struct Car
 	float x; // in mili #
 	int roadNumber;
 	Speed speedType;
+	CarType type;
 };
 
 struct Frog
@@ -223,6 +232,7 @@ WINDOW* InitWindow()
 		InitColorPair(Brick_Black, Brick, Black);
 		InitColorPair(GrassGreen_Black, GrassGreen, Black);
 		InitColorPair(Red_Black, Red, Black);
+		InitColorPair(Green_Black, Green, Black);
 	}
 
 	return win;
@@ -438,6 +448,11 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 		{
 			case Left:
 			{
+				if (c.type == Friendly && (int)round(c.x) - 1 == b->frog.x && c.roadNumber == b->frog.y)
+				{
+					break;
+				}
+
 				c.x -= deltaTime * c.speed / 1000.0f;
 
 				if (c.x <= 0)
@@ -460,6 +475,11 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 			}
 			case Right:
 			{
+				if (c.type == Friendly && (int)round(c.x) + 1 == b->frog.x && c.roadNumber == b->frog.y)
+				{
+					break;
+				}
+
 				c.x += deltaTime * c.speed / 1000.0f;
 
 				if (c.x >= b->width)
@@ -617,6 +637,112 @@ void DrawBuildings(int upperStatusAreaSize, Building* buildings, int buildingsSi
 	}
 }
 
+void DrawCar(Board* board, int i, int UpperStatusAreaSize)
+{
+	const char carsChars[4][4] = { "", "H", "HH", "HHH" };
+	Car& c = board->cars[i];
+	switch (board->roads[c.roadNumber].direction)
+	{
+		case Left:
+		{
+			move(c.roadNumber + UpperStatusAreaSize, c.x);
+			StartPair(Window_Black);
+			printw("<");
+			EndPair(Window_Black);
+
+			switch (c.type)
+			{
+			case Friendly:
+			{
+				StartPair(Green_Black);
+				break;
+			}
+			case Bad:
+			{
+				StartPair(Red_Black);
+				break;
+			}
+			case Taxi:
+			{
+				StartPair(Yellow_Black);
+				break;
+			}
+			}
+			printw(carsChars[c.size]);
+
+			switch (c.type)
+			{
+			case Friendly:
+			{
+				EndPair(Green_Black);
+				break;
+			}
+			case Bad:
+			{
+				EndPair(Red_Black);
+				break;
+			}
+			case Taxi:
+			{
+				EndPair(Yellow_Black);
+				break;
+			}
+			}
+
+			break;
+		}
+		case Right:
+		{
+			move(c.roadNumber + UpperStatusAreaSize, c.x);
+
+			switch (c.type)
+			{
+			case Friendly:
+			{
+				StartPair(Green_Black);
+				break;
+			}
+			case Bad:
+			{
+				StartPair(Red_Black);
+				break;
+			}
+			case Taxi:
+			{
+				StartPair(Yellow_Black);
+				break;
+			}
+			}
+
+			printw(carsChars[c.size]);
+
+			switch (c.type)
+			{
+			case Friendly:
+			{
+				EndPair(Green_Black);
+				break;
+			}
+			case Bad:
+			{
+				EndPair(Red_Black);
+				break;
+			}
+			case Taxi:
+			{
+				EndPair(Yellow_Black);
+				break;
+			}
+			}
+
+			StartPair(Window_Black);
+			printw(">");
+			EndPair(Window_Black);
+			break;
+		}
+	}
+}
+
 void GameDraw(GameState& self, WINDOW*win)
 {
 	const int UpperStatusAreaSize = 1;
@@ -647,30 +773,9 @@ void GameDraw(GameState& self, WINDOW*win)
 	printw("Pawel Leczkowski 203700");
 
 	// cars
-	const char carsChars[4][4] = { "", "", "H", "HH" };
 	for (int i = 0; i < board->carsSize; ++i)
 	{
-		Car& c = board->cars[i];
-		switch (board->roads[c.roadNumber].direction) {
-		case Left:
-			{
-			move(c.roadNumber + UpperStatusAreaSize, c.x);
-			StartPair(Window_Black);
-			printw("<");
-			EndPair(Window_Black);
-			printw(carsChars[c.size]);
-			break;
-			}
-		case Right:
-			{
-			move(c.roadNumber + UpperStatusAreaSize, c.x);
-			printw(carsChars[c.size]);
-			StartPair(Window_Black);
-			printw(">");
-			EndPair(Window_Black);
-			break;
-			}
-		}
+		DrawCar(board, i, UpperStatusAreaSize);
 	}
 
 	move(board->frog.y + UpperStatusAreaSize, board->frog.x);
@@ -742,11 +847,11 @@ void GameInit(GameState& self, void* initData)
 
 	board->carsSize = 5;
 	board->cars = new Car[board->carsSize];
-	board->cars[0] = { 3, 4.0f, -1, 1, Normal};
-	board->cars[1] = { 2, 2.5f, -1, 2, Normal };
-	board->cars[2] = { 1, 2.7f, 0, 5, Normal };
-	board->cars[3] = { 2, 5.5f, -1, 6, Normal };
-	board->cars[4] = { 3, 8.0f, -1, 7, Normal };
+	board->cars[0] = { 3, 4.0f, -1, 1, Normal, Friendly};
+	board->cars[1] = { 2, 2.5f, -1, 2, Normal, Bad };
+	board->cars[2] = { 1, 2.7f, 0, 5, Normal, Bad };
+	board->cars[3] = { 2, 5.5f, -1, 6, Normal, Taxi };
+	board->cars[4] = { 3, 8.0f, -1, 7, Normal, Friendly };
 
 	board->buildingsSize = 5;
 	board->buildings = new Building[board->buildingsSize];
