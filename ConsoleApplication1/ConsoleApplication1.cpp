@@ -442,7 +442,19 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 
 				if (c.x <= 0)
 				{
-					c.x = b->width - c.size + 1;
+					bool wrap = rand() % 2;
+
+					if (wrap)
+					{
+						c.x = b->width - c.size + 1;
+					}
+					else
+					{
+						// generate new car
+						int streets[] = { 1, 2, 5, 6, 7 };
+						c.x = b->width - c.size + 1;
+						c.roadNumber = streets[rand()%5];
+					}
 				}
 				break;
 			}
@@ -452,7 +464,19 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 
 				if (c.x >= b->width)
 				{
-					c.x = 1.0f - c.size;
+					bool wrap = rand() % 2;
+
+					if (wrap)
+					{
+						c.x = 1.0f - c.size;
+					}
+					else
+					{
+						// generate new car
+						int streets[] = { 1, 2, 5, 6, 7 };
+						c.x = 1.0f - c.size;
+						c.roadNumber = streets[rand() % 5];
+					}
 				}
 				break;
 			}
