@@ -373,6 +373,7 @@ bool CanFrogJump(int newX, int newY, Board* b)
 GameStateChange GameKeysHandler(GameState& self, int key)
 {
 	Board* board = (Board*)self.data;
+	bool jump = false;
 
 	switch (key)
 	{
@@ -382,7 +383,8 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 		}
 		case 'w':
 		{
-			if (CanFrogJump(board->frog.x, board->frog.y - 1, board))
+			jump = CanFrogJump(board->frog.x, board->frog.y - 1, board);
+			if (jump)
 			{
 				board->frog.onCar = false;
 				board->frog.car = NULL;
@@ -392,33 +394,22 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 				{
 					board->score++;
 				}
-
-				if (IsFrogInHome(board->frog, board->home))
-				{
-					board->score += board->maxTime - board->time / 1000;
-					GameOverMessageData* data = new GameOverMessageData{ true, board->score };
-					return { ChangeToGameOver, data };
-				}
 			}
-			return { ChangeNoChange, NULL };
+			break;
 		}
 		case 'a':
 		{
-			if (CanFrogJump(board->frog.x - 1, board->frog.y, board))
+			jump = CanFrogJump(board->frog.x - 1, board->frog.y, board);
+			if (jump)
 			{
 				board->frog.x--;
-				if (IsFrogInHome(board->frog, board->home))
-				{
-					board->score += board->maxTime - board->time / 1000;
-					GameOverMessageData* data = new GameOverMessageData{ true, board->score };
-					return { ChangeToGameOver, data };
-				}
 			}
-			return { ChangeNoChange, NULL };
+			break;
 		}
 		case 's':
 		{
-			if (CanFrogJump(board->frog.x, board->frog.y + 1, board))
+			jump = CanFrogJump(board->frog.x, board->frog.y + 1, board);
+			if (jump)
 			{
 				board->frog.onCar = false;
 				board->frog.car = NULL;
@@ -428,35 +419,27 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 				{
 					board->score++;
 				}
-
-				if (IsFrogInHome(board->frog, board->home))
-				{
-					board->score += board->maxTime - board->time / 1000;
-					GameOverMessageData* data = new GameOverMessageData{ true, board->score };
-					return { ChangeToGameOver, data };
-				}
 			}
-			return { ChangeNoChange, NULL };
+			break;
 		}
 		case 'd':
 		{
-			if (CanFrogJump(board->frog.x + 1, board->frog.y, board))
+			jump = CanFrogJump(board->frog.x + 1, board->frog.y, board);
+			if (jump)
 			{
 				board->frog.x++;
-				if (IsFrogInHome(board->frog, board->home))
-				{
-					board->score += board->maxTime - board->time / 1000;
-					GameOverMessageData* data = new GameOverMessageData{ true, board->score };
-					return { ChangeToGameOver, data };
-				}
 			}
-			return { ChangeNoChange, NULL };
-		}
-		default:
-		{
-			return { ChangeNoChange, NULL };
+			break;
 		}
 	}
+
+	if (jump && IsFrogInHome(board->frog, board->home))
+	{
+		board->score += board->maxTime - board->time / 1000;
+		GameOverMessageData* data = new GameOverMessageData{ true, board->score };
+		return { ChangeToGameOver, data };
+	}
+	return { ChangeNoChange, NULL };
 }
 
 bool IsFrogHitted(Frog f, Car c)
@@ -468,19 +451,51 @@ bool IsFrogHitted(Frog f, Car c)
 	return false;
 }
 
-GameStateChange GameTimerHandler(GameState& self, int time)
+void ChangeCarSpeed(Car& c)
 {
-	Board* b = (Board*)self.data;
-	b->frog.skin = time / 1000 % 2;
+	// speed up cars
+	int speedChange = rand() % 100;
+	float speedUpFactor = 5.0f;
 
-	if (b->frog.onCar)
-	{
-		b->frog.x = b->frog.car->x;
-		b->frog.y = b->frog.car->roadNumber;
+	if (c.speedType == Normal)
+	{ // change car speed
+		if (speedChange < 10) // 10% of chances
+		{ // speed up
+			c.speed *= speedUpFactor;
+			c.speedType = Fast;
+		}
+		else if (speedChange < 10) // 10% of chances
+		{ // slow down
+			c.speed *= 1.0f / speedUpFactor;
+			c.speedType = Slow;
+		}
 	}
+	else if (speedChange < 1) // 1% of chances
+	{ // change it back
+		if (c.speedType == Slow)
+		{ // speed up
+			c.speed *= speedUpFactor;
+		}
+		else if (c.speedType == Fast)
+		{ // slow down
+			c.speed *= 1.0f / speedUpFactor;
+		}
+		c.speedType = Normal;
+	}
+}
 
-	// move cars
-	int deltaTime = time - b->time;
+void FrogInTaxiScore(Board* b, Car& c)
+{
+	b->frog.car = &c;
+	if (!b->frog.onCar)
+	{
+		b->score++;
+	}
+	b->frog.onCar = true;
+}
+
+GameStateChange MoveCars(Board* b, int deltaTime)
+{
 	for (int i = 0; i < b->carsSize; ++i)
 	{
 		Car& c = b->cars[i];
@@ -490,12 +505,7 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 			{
 				if (c.type == Taxi && (int)round(c.x) - 1 == b->frog.x && c.roadNumber == b->frog.y)
 				{
-					b->frog.car = &c;
-					if (!b->frog.onCar)
-					{
-						b->score++;
-					}
-					b->frog.onCar = true;
+					FrogInTaxiScore(b, c);
 				}
 
 				if (c.type == Friendly && (int)round(c.x) - 1 == b->frog.x && c.roadNumber == b->frog.y)
@@ -518,7 +528,7 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 						// generate new car
 						int streets[] = { 1, 2, 5, 6, 7 };
 						c.x = b->width - c.size + 1;
-						c.roadNumber = streets[rand()%5];
+						c.roadNumber = streets[rand() % 5];
 					}
 				}
 
@@ -528,12 +538,7 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 			{
 				if (c.type == Taxi && (int)round(c.x) + 1 == b->frog.x && c.roadNumber == b->frog.y)
 				{
-					b->frog.car = &c;
-					if (!b->frog.onCar)
-					{
-						b->score++;
-					}
-					b->frog.onCar = true;
+					FrogInTaxiScore(b, c);
 				}
 
 				if (c.type == Friendly && (int)round(c.x) + 1 == b->frog.x && c.roadNumber == b->frog.y)
@@ -563,38 +568,7 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 			}
 		}
 
-		// speed up cars
-		int speedChange = rand() % 100;
-		float speedUpFactor = 5.0f;
-
-		if (c.speedType == Normal)
-		{ // change car speed
-			if (speedChange < 10) // 10% of chances
-			{ // speed up
-				c.speed *= speedUpFactor;
-				c.speedType = Fast;
-			}
-			else if (speedChange < 10) // 10% of chances
-			{ // slow down
-				c.speed *= 1.0f / speedUpFactor;
-				c.speedType = Slow;
-			}
-		}
-		else if(speedChange < 1) // 1% of chances
-		{ // change it back
-			if (c.speedType == Slow)
-			{ // speed up
-				c.speed *= speedUpFactor;
-			}
-			else if (c.speedType == Fast)
-			{ // slow down
-				c.speed *= 1.0f / speedUpFactor;
-			}
-			c.speedType = Normal;
-		}
-		
-
-		b->frog.x;
+		ChangeCarSpeed(c);
 
 		if (IsFrogHitted(b->frog, c))
 		{
@@ -603,7 +577,11 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 		}
 	}
 
-	// stork fly
+	return { ChangeNoChange, NULL };
+}
+
+GameStateChange StorkFly(Board* b, int deltaTime)
+{
 	b->stork.distance += deltaTime * b->stork.speed / 1000.0f;
 	if (b->stork.distance > 1)
 	{
@@ -653,6 +631,34 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 			GameOverMessageData* data = new GameOverMessageData{ false, 0 };
 			return { ChangeToGameOver, data };
 		}
+	}
+	return { ChangeNoChange, NULL };
+}
+
+GameStateChange GameTimerHandler(GameState& self, int time)
+{
+	Board* b = (Board*)self.data;
+	b->frog.skin = time / 1000 % 2;
+
+	if (b->frog.onCar)
+	{
+		b->frog.x = b->frog.car->x;
+		b->frog.y = b->frog.car->roadNumber;
+	}
+
+	// move cars
+	int deltaTime = time - b->time;
+	GameStateChange change = MoveCars(b, deltaTime);
+	if (change.message != ChangeNoChange)
+	{
+		return change;
+	}
+
+	// stork fly
+	change = StorkFly(b, deltaTime);
+	if (change.message != ChangeNoChange)
+	{
+		return change;
 	}
 
 	b->time = time;
