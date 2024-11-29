@@ -707,95 +707,64 @@ void DrawCar(Board* board, int i, int UpperStatusAreaSize)
 {
 	const char carsChars[4][4] = { "", "H", "HH", "HHH" };
 	Car& c = board->cars[i];
+
+	move(c.roadNumber + UpperStatusAreaSize, c.x);
 	switch (board->roads[c.roadNumber].direction)
 	{
 		case Left:
 		{
-			move(c.roadNumber + UpperStatusAreaSize, c.x);
 			StartPair(Window_Black);
 			printw("<");
 			EndPair(Window_Black);
 
 			switch (c.type)
 			{
-			case Friendly:
-			{
-				StartPair(Green_Black);
-				break;
+				case Friendly:
+				{
+					StartPair(Green_Black);
+					printw(carsChars[c.size]);
+					EndPair(Green_Black);
+					break;
+				}
+				case Bad:
+				{
+					StartPair(Red_Black);
+					printw(carsChars[c.size]);
+					EndPair(Red_Black);
+					break;
+				}
+				case Taxi:
+				{
+					StartPair(Yellow_Black);
+					printw(carsChars[c.size]);
+					EndPair(Yellow_Black);
+					break;
+				}
 			}
-			case Bad:
-			{
-				StartPair(Red_Black);
-				break;
-			}
-			case Taxi:
-			{
-				StartPair(Yellow_Black);
-				break;
-			}
-			}
-			printw(carsChars[c.size]);
-
-			switch (c.type)
-			{
-			case Friendly:
-			{
-				EndPair(Green_Black);
-				break;
-			}
-			case Bad:
-			{
-				EndPair(Red_Black);
-				break;
-			}
-			case Taxi:
-			{
-				EndPair(Yellow_Black);
-				break;
-			}
-			}
-
 			break;
 		}
 		case Right:
 		{
-			move(c.roadNumber + UpperStatusAreaSize, c.x);
-
 			switch (c.type)
 			{
 			case Friendly:
 			{
 				StartPair(Green_Black);
-				break;
-			}
-			case Bad:
-			{
-				StartPair(Red_Black);
-				break;
-			}
-			case Taxi:
-			{
-				StartPair(Yellow_Black);
-				break;
-			}
-			}
-
-			printw(carsChars[c.size]);
-
-			switch (c.type)
-			{
-			case Friendly:
-			{
+				printw(carsChars[c.size]);
 				EndPair(Green_Black);
 				break;
 			}
 			case Bad:
 			{
+				StartPair(Red_Black);
+				printw(carsChars[c.size]);
 				EndPair(Red_Black);
 				break;
 			}
 			case Taxi:
 			{
+				StartPair(Yellow_Black);
+				printw(carsChars[c.size]);
 				EndPair(Yellow_Black);
 				break;
 			}
@@ -1156,7 +1125,7 @@ void GameOverDone(GameState& self, void* initData)
 	delete initData;
 }
 
-void insertYou(GameOverMessageData* data)
+void InsertYou(GameOverMessageData* data)
 {
 	for (int i = 5 - 1; i >= 0; --i)
 	{
@@ -1213,7 +1182,7 @@ void GameOverInit(GameState& self, void* initData)
 		fclose(file);
 	}
 
-	insertYou(data);
+	InsertYou(data);
 
 	Resize(56, 45);
 }
