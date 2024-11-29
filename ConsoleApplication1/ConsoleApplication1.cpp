@@ -985,6 +985,19 @@ GameStateChange GameOverTimerHandler(GameState& self, int time)
 	return { ChangeNoChange, NULL };
 }
 
+void DrawTable(GameOverMessageData* data)
+{
+	printw("                      Best scores:                     \n");
+	printw("                  +------------+-----+                  ");
+
+	for (int i = 0; i < 5; ++i)
+	{
+		printw("                  | % 10s | %03d |                  ", data->players[i].name, data->players[i].score);
+		printw("                  +------------+-----+                  ");
+	}
+	printw("\n");
+}
+
 void GameOverDraw(GameState& self, WINDOW*win)
 {
 	GameOverMessageData* data = (GameOverMessageData*)self.data;
@@ -993,37 +1006,37 @@ void GameOverDraw(GameState& self, WINDOW*win)
 	if (data->won)
 	{
 		printw("\n");
-		printw("        Y   Y   OO   U  U    W   W   OO   N   N        \n");
-		printw("         Y Y   O  O  U  U    W   W  O  O  NN  N        \n");
-		printw("          Y    O  O  U  U    W   W  O  O  N N N        \n");
-		printw("          Y    O  O  U  U    W W W  O  O  N  NN        \n");
-		printw("          Y     OO    UU      W W    OO   N   N        \n");
+		printw("        Y   Y   OO   U  U    W   W   OO   N   N\n");
+		printw("         Y Y   O  O  U  U    W   W  O  O  NN  N\n");
+		printw("          Y    O  O  U  U    W   W  O  O  N N N\n");
+		printw("          Y    O  O  U  U    W W W  O  O  N  NN\n");
+		printw("          Y     OO    UU      W W    OO   N   N\n");
 		printw("\n"); StartPair(Brick_Black);
-		printw("                                    +--+               \n");
-		printw("           _________________________|##|_____          \n");
-		printw("          /#########################|##|#####\\        \n");
-		printw("         /##########################+--+######\\       \n");
-		printw("        /######################################\\      \n");
-		printw("       /########################################\\     \n");
-		printw("      /+----------------------------------------+\\    \n");
-		printw("     / |                                        | \\   \n");
-		printw("       |                                        |      \n");
-		printw("       |  +------+                              |      \n"); EndPair(Brick_Black);
-		StartPair(Brick_Black); printw("       |  |      |             "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("(.)_(.)"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("          |      \n"); EndPair(Brick_Black);
-		StartPair(Brick_Black); printw("       |  |      |          "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("_ (  ,_,  ) _"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("       |      \n"); EndPair(Brick_Black);
-		StartPair(Brick_Black); printw("       |  |    o |         "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("/ \\/`-----'\\/ \\"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("      |      \n"); EndPair(Brick_Black);
-		StartPair(Brick_Black); printw("       |  |      |       "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("__\\ ( (     ) ) /__"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("    |      \n"); EndPair(Brick_Black);
-		StartPair(Brick_Black); printw("       |  |      |       "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(")   /\\ \\._./ /\\   ("); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("    |     \n"); EndPair(Brick_Black);
-		StartPair(Brick_Black); printw("       |  |      |        "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(")_/ /|\\   /|\\ \\_("); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("     |      \n"); EndPair(Brick_Black);
+		printw("\n");
+		printw("           _________________________|##|_____\n");
+		printw("          /#########################|##|#####\\\n");
+		printw("         /##########################+--+######\\\n");
+		printw("        /######################################\\\n");
+		printw("       /########################################\\\n");
+		printw("      /+----------------------------------------+\\\n");
+		printw("     / |                                        | \\ \n");
+		printw("       |                                        |\n");
+		printw("       |  +------+                              |\n"); EndPair(Brick_Black);
+		StartPair(Brick_Black); printw("       |  |      |             "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("(.)_(.)"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("          |\n"); EndPair(Brick_Black);
+		StartPair(Brick_Black); printw("       |  |      |          "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("_ (  ,_,  ) _"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("       |\n"); EndPair(Brick_Black);
+		StartPair(Brick_Black); printw("       |  |    o |         "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("/ \\/`-----'\\/ \\"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("      |\n"); EndPair(Brick_Black);
+		StartPair(Brick_Black); printw("       |  |      |       "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("__\\ ( (     ) ) /__"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("    |\n"); EndPair(Brick_Black);
+		StartPair(Brick_Black); printw("       |  |      |       "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(")   /\\ \\._./ /\\   ("); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("    |\n"); EndPair(Brick_Black);
+		StartPair(Brick_Black); printw("       |  |      |        "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(")_/ /|\\   /|\\ \\_("); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("     |\n"); EndPair(Brick_Black);
 		StartPair(GrassGreen_Black); printw("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"); EndPair(GrassGreen_Black);
-		printw("                    Your score: %d                     \n", data->score);
+		printw("                    Your score: %d\n", data->score);
 
 		if (data->players[4].score < data->score)
 		{
 			printw("\n");
-			printw("                      Enter name:                      \n");
-			printw("                    '>' => enter                  \n");
-			printw("                    '<' => backspace              \n");
+			printw("                      Enter name:\n");
+			printw("                    '>' => enter\n");
+			printw("                    '<' => backspace\n");
 			printw("                       %s", data->str);
 
 			if (!data->enter)
@@ -1032,30 +1045,22 @@ void GameOverDraw(GameState& self, WINDOW*win)
 			}
 			printw("\n");
 		}
-			printw("                      Best scores:                     \n");
-			printw("                  +------------+-----+                  ");
-
-			for (int i = 0; i < 5; ++i)
-			{
-				printw("                  | % 10s | %03d |                  ", data->players[i].name, data->players[i].score);
-				printw("                  +------------+-----+                  ");
-			}
-			printw("\n");
+		DrawTable(data);
 		
 
 		if (data->enter || !(data->players[4].score < data->score))
 		{
-			printw("                 q => quit to main menu                \n");
+			printw("                 q => quit to main menu\n");
 		}
 	}
 	else
 	{
 		printw("\n");
-		printw("      Y   Y   OO   U  U    L     OO    SS   TTTTT      \n");
-		printw("       Y Y   O  O  U  U    L    O  O  S       T        \n");
-		printw("        Y    O  O  U  U    L    O  O   SS     T        \n");
-		printw("        Y    O  O  U  U    L    O  O     S    T        \n");
-		printw("        Y     OO    UU     LLL   OO    SS     T        \n");
+		printw("      Y   Y   OO   U  U    L     OO    SS   TTTTT\n");
+		printw("       Y Y   O  O  U  U    L    O  O  S       T\n");
+		printw("        Y    O  O  U  U    L    O  O   SS     T\n");
+		printw("        Y    O  O  U  U    L    O  O     S    T\n");
+		printw("        Y     OO    UU     LLL   OO    SS     T\n");
 		printw("\n");
 		printw("                                  +--------------------\n");
 		printw("                                 //---------++---------\n");
@@ -1067,28 +1072,17 @@ void GameOverDraw(GameState& self, WINDOW*win)
 		StartPair(Yellow_Black); printw("-###"); EndPair(Yellow_Black); printw("                         |           O  ||         \n");
 		StartPair(Yellow_Black); printw("-###"); EndPair(Yellow_Black); printw("       ______            |              ||         \n");
 		StartPair(Yellow_Black); printw("/"); EndPair(Yellow_Black); printw("|       / ,-~-, \\           |              ||         \n");
-		StartPair(FrogBlood_Black); printw(" |"); EndPair(FrogBlood_Black);  StartPair(FrogBlood_FrogBlood); printw("  "); EndPair(FrogBlood_FrogBlood);  printw("    // \\   / \\\\          |              ||         \n");
-		StartPair(FrogBlood_Black); printw(" |"); EndPair(FrogBlood_Black); StartPair(FrogBlood_FrogBlood); printw("   "); EndPair(FrogBlood_FrogBlood); printw("  |,   \\ /   ,|         |              ||         \n");
+		StartPair(FrogBlood_Black); printw(" |"); EndPair(FrogBlood_Black);  StartPair(FrogBlood_FrogBlood); printw("  "); EndPair(FrogBlood_FrogBlood);  printw("    // \\   / \\\\          |              ||\n");
+		StartPair(FrogBlood_Black); printw(" |"); EndPair(FrogBlood_Black); StartPair(FrogBlood_FrogBlood); printw("   "); EndPair(FrogBlood_FrogBlood); printw("  |,   \\ /   ,|         |              ||\n");
 		StartPair(FrogBlood_Black); printw(" +-----+|--"); EndPair(FrogBlood_Black); printw("--O----|+-----------------------------------\n");
 		StartPair(FrogBlood_Black); printw("        \\"); EndPair(FrogBlood_Black); printw("   / \\   /                                    \n");
 		StartPair(FrogBlood_Black); printw("         ',"); EndPair(FrogBlood_Black); printw("/   \\,'                                     \n");
 		StartPair(FrogBlood_Black); printw("           '-~-'"); EndPair(FrogBlood_Black); printw("                                       \n");
 		StartPair(FrogBlood_FrogBlood); printw("-------------------------"); EndPair(FrogBlood_FrogBlood); StartPair(RoadGray_RoadGray); printw("------------------------------\n"); EndPair(RoadGray_RoadGray);
 
+		DrawTable(data);
 
-		printw("                      Best scores:                     \n");
-		printw("                  +------------+-----+                  ");
-
-		for (int i = 0; i < 5; ++i)
-		{
-			printw("                  | % 10s | %03d |                  ", data->players[i].name, data->players[i].score);
-			printw("                  +------------+-----+                  ");
-		}
-		printw("\n");
-
-
-
-		printw("                 q => quit to main menu                \n");
+		printw("                 q => quit to main menu\n");
 	}
 	wrefresh(win);
 }
