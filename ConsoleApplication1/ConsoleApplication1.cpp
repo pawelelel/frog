@@ -847,11 +847,9 @@ void GameDone(GameState& self, void* initData)
 	delete initData;
 }
 
-void GameInit(GameState& self, void* initData)
+void InitRoads(Board* board, int roadSize)
 {
-	Board* board = new Board;
-	board->width = 80;
-	board->roadsSize = 10;
+	board->roadsSize = roadSize;
 	board->roads = new Road[board->roadsSize];
 	board->roads[0].type = Grass;
 	board->roads[1].type = Street;
@@ -873,35 +871,67 @@ void GameInit(GameState& self, void* initData)
 	{
 		board->roads[i].direction = Left;
 	}
+}
 
+void InitFrog(Board* board)
+{
 	board->frog = { board->width / 2, board->roadsSize - 1, 0 };
 	board->frog.car = NULL;
 	board->frog.onCar = false;
+}
 
-
-	int homeY = rand() % board->width;
-	board->home = { homeY, 0 };
-	board->score = 0;
-	board->time = 0;
-	board->maxTime = 100;
-
-	board->carsSize = 5;
+void InitCars(Board* board, int carsSize)
+{
+	board->carsSize = carsSize;
 	board->cars = new Car[board->carsSize];
-	board->cars[0] = { 3, 4.0f, -1, 1, Normal, Friendly};
+	board->cars[0] = { 3, 4.0f, -1, 1, Normal, Friendly };
 	board->cars[1] = { 2, 2.5f, -1, 2, Normal, Bad };
 	board->cars[2] = { 1, 2.7f, 0, 5, Normal, Bad };
 	board->cars[3] = { 2, 5.5f, -1, 6, Normal, Taxi };
 	board->cars[4] = { 3, 8.0f, -1, 7, Normal, Friendly };
+}
 
-	board->buildingsSize = 5;
+void InitBuildings(Board* board, int buildingsSize)
+{
+	board->buildingsSize = buildingsSize;
 	board->buildings = new Building[board->buildingsSize];
 	board->buildings[0] = { 5, 3 };
 	board->buildings[1] = { 1, 3 };
 	board->buildings[2] = { 5, 4 };
 	board->buildings[3] = { 4, 4 };
 	board->buildings[4] = { 5, 8 };
+}
 
-	board->stork = {0, 0, 0.0f, 1.0f};
+void InitOtherVariables(Board* board)
+{
+	int homeY = rand() % board->width;
+	board->home = { homeY, 0 };
+	board->score = 0;
+	board->time = 0;
+	board->maxTime = 100;
+}
+
+void InitStork(Board* board)
+{
+	board->stork = { 0, 0, 0.0f, 1.0f };
+}
+
+void GameInit(GameState& self, void* initData)
+{
+	Board* board = new Board;
+	board->width = 80;
+
+	InitRoads(board, 10);
+
+	InitFrog(board);
+
+	InitCars(board, 5);
+
+	InitBuildings(board, 5);
+
+	InitOtherVariables(board);
+
+	InitStork(board);
 
 	int cols = board->width + 1;
 	int lines = board->roadsSize + 2;
