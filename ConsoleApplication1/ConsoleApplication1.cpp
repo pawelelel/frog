@@ -240,6 +240,12 @@ WINDOW* InitWindow()
 	return win;
 }
 
+void Resize(int cols, int lines)
+{
+	resize_term(1000, 1000);
+	resize_term(lines, cols);
+}
+
 // Start
 
 GameStateChange StartKeysHandler(GameState& self, int key)
@@ -304,8 +310,8 @@ void StartDone(GameState& self, void* initData)
 
 void StartInit(GameState& init, void* initData)
 {
-	int col = 53, row = 23;
-	resize_term(row, col);
+	int col = 53, line = 23;
+	Resize(col, line);
 }
 
 GameState CreateStart()
@@ -864,7 +870,7 @@ void GameDone(GameState& self, void* initData)
 void GameInit(GameState& self, void* initData)
 {
 	Board* board = new Board;
-	board->width = 100;
+	board->width = 80;
 	board->roadsSize = 10;
 	board->roads = new Road[board->roadsSize];
 	board->roads[0].type = Grass;
@@ -917,8 +923,10 @@ void GameInit(GameState& self, void* initData)
 
 	board->stork = {0, 0, 0.0f, 1.0f};
 
-	int col = board->width + 1, row = board->roadsSize + 2;
-	resize_term(row, col);
+	int cols = board->width + 1;
+	int lines = board->roadsSize + 2;
+
+	Resize(cols, lines);
 
 	self.data = board;
 }
@@ -1154,10 +1162,6 @@ void insertYou(GameOverMessageData* data)
 
 void GameOverInit(GameState& self, void* initData)
 {
-	int col = 56, row = 45;
-	resize_term(row, col);
-
-
 	GameOverMessageData* data = (GameOverMessageData*)initData;
 	data->enter = false;
 	strcpy(data->str, "\0");
@@ -1199,7 +1203,8 @@ void GameOverInit(GameState& self, void* initData)
 	}
 
 	insertYou(data);
-	printw("");
+
+	Resize(56, 45);
 }
 
 GameState CreateGameOver()
@@ -1291,10 +1296,5 @@ int main()
 			}
 		}
 		current.init(current, change.data);
-
-
-		int x, y;
-		getmaxyx(win, y, x);
-		printw("");
 	}
 }
