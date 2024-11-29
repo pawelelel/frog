@@ -272,6 +272,16 @@ GameStateChange StartTimerHandler(GameState& self, int time)
 	return { ChangeNoChange, NULL };
 }
 
+void DrawFrog()
+{
+	printw("                     (.)_(.)                        \n");
+	printw("                  _ (  ,_,  ) _                     \n");
+	printw("                 / \\/`-----'\\/ \\                    \n");
+	printw("               __\\ ( (     ) ) /__                  \n");
+	printw("               )   /\\ \\._./ /\\   (                  \n");
+	printw("                )_/ /|\\   /|\\ \\_(                   \n");
+}
+
 void StartDraw(GameState& self, WINDOW* win)
 {
 	clear();
@@ -281,20 +291,15 @@ void StartDraw(GameState& self, WINDOW* win)
 	printw("       J  U  U  M M M M  PPP   I  N N N  G          \n");
 	printw("       J  U  U  M  M  M  P     I  N  NN  G  GG      \n");
 	printw("     JJ    UU   M     M  P     I  N   N   GG        \n");
-	printw("                                                    \n");
+	printw("\n");
 	printw("              FFF  RRR    OO    GG                  \n");
 	printw("              F    R  R  O  O  G  G                 \n");
 	printw("              FFF  RRR   O  O  G                    \n");
 	printw("              F    R R   O  O  G  GG                \n");
 	printw("              F    R  R   OO    GG                  \n");
-	printw("                                                    \n");
-	printw("                     (.)_(.)                        \n");
-	printw("                  _ (  ,_,  ) _                     \n");
-	printw("                 / \\/`-----'\\/ \\                    \n");
-	printw("               __\\ ( (     ) ) /__                  \n");
-	printw("               )   /\\ \\._./ /\\   (                  \n");
-	printw("                )_/ /|\\   /|\\ \\_(                   \n");
-	printw("                                                    \n");
+	printw("\n");
+	DrawFrog();
+	printw("\n");
 	printw("               s => start new game                  \n");
 	printw("               q => quit program                    \n");
 	EndPair(FrogGreen_Black);
@@ -392,7 +397,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 				{
 					board->score += board->maxTime - board->time / 1000;
 					GameOverMessageData* data = new GameOverMessageData{ true, board->score };
-					return { ChangeToGameOver, data};
+					return { ChangeToGameOver, data };
 				}
 			}
 			return { ChangeNoChange, NULL };
