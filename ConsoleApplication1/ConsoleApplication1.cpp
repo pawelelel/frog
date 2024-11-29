@@ -290,7 +290,7 @@ void StartDraw(GameState& self, WINDOW* win)
 	printw("                                                    \n");
 	printw("                     (.)_(.)                        \n");
 	printw("                  _ (  ,_,  ) _                     \n");
-	printw("                 / \\/`-----'\\/ \\                       \n");
+	printw("                 / \\/`-----'\\/ \\                    \n");
 	printw("               __\\ ( (     ) ) /__                  \n");
 	printw("               )   /\\ \\._./ /\\   (                  \n");
 	printw("                )_/ /|\\   /|\\ \\_(                   \n");
