@@ -325,7 +325,7 @@ void StartDone(GameState& self, void* initData)
 {
 	// uncomment if start has any initdata
 	//delete self.data;
-	delete initData;
+	//delete initData;
 }
 
 void StartInit(GameState& init, void* initData)
@@ -511,6 +511,34 @@ void FrogGetInTaxi(Board* b, Car& c)
 	b->frog.onCar = true;
 }
 
+void ChangeCarRoad(const Board* b, Car& c)
+{
+	int numberOfStreets = 0;
+	for (int i = 0; i < b->roadsSize; ++i)
+	{
+		if (b->roads[i].type == Street)
+		{
+			numberOfStreets++;
+		}
+	}
+	int* streets = new int[numberOfStreets];
+	int index = 0;
+	for (int i = 0; i < b->roadsSize; ++i)
+	{
+		if (b->roads[i].type == Street)
+		{
+			streets[index] = i;
+			index++;
+		}
+	}
+
+	c.x = 1.0f - c.size;
+	int newRoad = rand() % numberOfStreets;
+	c.roadNumber = streets[newRoad];
+
+	delete[] streets;
+}
+
 GameStateChange MoveCars(Board* b, int deltaTime)
 {
 	for (int i = 0; i < b->carsSize; ++i)
@@ -543,10 +571,7 @@ GameStateChange MoveCars(Board* b, int deltaTime)
 					}
 					else
 					{
-						// generate new car
-						int streets[] = { 1, 2, 5, 6, 7 };
-						c.x = b->width - c.size + 1;
-						c.roadNumber = streets[rand() % 5];
+						ChangeCarRoad(b, c);
 					}
 				}
 
@@ -577,10 +602,7 @@ GameStateChange MoveCars(Board* b, int deltaTime)
 					}
 					else
 					{
-						// generate new car
-						int streets[] = { 1, 2, 5, 6, 7 };
-						c.x = 1.0f - c.size;
-						c.roadNumber = streets[rand() % 5];
+						ChangeCarRoad(b, c);
 					}
 				}
 				break;
