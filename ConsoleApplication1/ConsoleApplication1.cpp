@@ -1,3 +1,12 @@
+// ReSharper disable CppCStyleCast
+// ReSharper disable CppClangTidyCertErr33C
+// ReSharper disable CppDeprecatedEntity
+// ReSharper disable CppClangTidyClangDiagnosticDeprecatedDeclarations
+// ReSharper disable CppClangTidyBugproneNarrowingConversions
+// ReSharper disable CppClangTidyClangDiagnosticImplicitIntFloatConversion
+// ReSharper disable CppClangTidyConcurrencyMtUnsafe
+// ReSharper disable CppClangTidyPerformanceTypePromotionInMathFn
+// ReSharper disable CppZeroConstantCanBeReplacedWithNullptr
 #include <conio.h>
 #include <curses.h>
 #include <math.h>
@@ -181,7 +190,7 @@ struct Board
 
 // Window
 
-void InitColor(int colorId, short r, short g, short b)
+void InitColor(short colorId, int r, int g, int b)
 {
 	r = r * 200 / 51;
 	g = g * 200 / 51;
@@ -272,7 +281,7 @@ GameStateChange StartTimerHandler(GameState& self, int time)
 	return { ChangeNoChange, NULL };
 }
 
-void DrawFrog()
+void DrawStartFrog()
 {
 	printw("                     (.)_(.)                        \n");
 	printw("                  _ (  ,_,  ) _                     \n");
@@ -298,7 +307,7 @@ void StartDraw(GameState& self, WINDOW* win)
 	printw("              F    R R   O  O  G  GG                \n");
 	printw("              F    R  R   OO    GG                  \n");
 	printw("\n");
-	DrawFrog();
+	DrawStartFrog();
 	printw("\n");
 	printw("               s => start new game                  \n");
 	printw("               q => quit program                    \n");
@@ -327,12 +336,13 @@ GameState CreateStart()
 	start.timerHandler = &StartTimerHandler;
 	start.draw = &StartDraw;
 	start.done = &StartDone;
+	start.data = NULL;
 	return start;
 }
 
 // Game
 
-bool IsFrogInHome(Frog frog, Home home)
+bool IsFrogInHome(Frog& frog, Home& home)
 {
 	if (frog.x == home.x && frog.y == home.y)
 	{
@@ -442,7 +452,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 	return { ChangeNoChange, NULL };
 }
 
-bool IsFrogHitted(Frog f, Car c)
+bool IsFrogHitted(Frog& f, Car& c)
 {
 	if (c.type == Bad && !f.onCar && f.x == (int)round(c.x) && f.y == c.roadNumber)
 	{
@@ -464,7 +474,7 @@ void ChangeCarSpeed(Car& c)
 			c.speed *= speedUpFactor;
 			c.speedType = Fast;
 		}
-		else if (speedChange < 10) // 10% of chances
+		else if (speedChange < 20) // 10% of chances
 		{ // slow down
 			c.speed *= 1.0f / speedUpFactor;
 			c.speedType = Slow;
@@ -484,7 +494,7 @@ void ChangeCarSpeed(Car& c)
 	}
 }
 
-void FrogInTaxiScore(Board* b, Car& c)
+void FrogGetInTaxi(Board* b, Car& c)
 {
 	b->frog.car = &c;
 	if (!b->frog.onCar)
@@ -503,14 +513,15 @@ GameStateChange MoveCars(Board* b, int deltaTime)
 		{
 			case Left:
 			{
-				if (c.type == Taxi && (int)round(c.x) - 1 == b->frog.x && c.roadNumber == b->frog.y)
-				{
-					FrogInTaxiScore(b, c);
-				}
-
-				if (c.type == Friendly && (int)round(c.x) - 1 == b->frog.x && c.roadNumber == b->frog.y)
+				int distance = (int)round(c.x) - b->frog.x;
+				if (c.type == Friendly && 0 <= distance && distance <= 2 && c.roadNumber == b->frog.y)
 				{
 					break;
+				}
+
+				if (c.type == Taxi && (int)round(c.x) - 1 == b->frog.x && c.roadNumber == b->frog.y)
+				{
+					FrogGetInTaxi(b, c);
 				}
 
 				c.x -= deltaTime * c.speed / 1000.0f;
@@ -536,14 +547,15 @@ GameStateChange MoveCars(Board* b, int deltaTime)
 			}
 			case Right:
 			{
-				if (c.type == Taxi && (int)round(c.x) + 1 == b->frog.x && c.roadNumber == b->frog.y)
-				{
-					FrogInTaxiScore(b, c);
-				}
-
-				if (c.type == Friendly && (int)round(c.x) + 1 == b->frog.x && c.roadNumber == b->frog.y)
+				int distance = b->frog.x - (int)round(c.x) + c.size;
+				if (c.type == Friendly && 0 <= distance && distance <= 2 && c.roadNumber == b->frog.y)
 				{
 					break;
+				}
+
+				if (c.type == Taxi && (int)round(c.x) + 1 == b->frog.x && c.roadNumber == b->frog.y)
+				{
+					FrogGetInTaxi(b, c);
 				}
 
 				c.x += deltaTime * c.speed / 1000.0f;
@@ -586,44 +598,23 @@ GameStateChange StorkFly(Board* b, int deltaTime)
 	if (b->stork.distance > 1)
 	{
 		b->stork.distance--;
-		int deltaX = b->stork.x - b->frog.x;
-		int deltaY = b->stork.y - b->frog.y;
 
-		if (deltaX == 0 && deltaY > 0)
-		{
-			b->stork.y--;
-		}
-		else if (deltaX == 0 && deltaY < 0)
-		{
-			b->stork.y++;
-		}
-		else if (deltaY == 0 && deltaX > 0)
-		{
-			b->stork.x--;
-		}
-		else if (deltaY == 0 && deltaX < 0)
+		if (b->stork.x < b->frog.x)
 		{
 			b->stork.x++;
 		}
-		else if (deltaX > 0 && deltaY > 0)
+		else if (b->stork.x > b->frog.x)
 		{
 			b->stork.x--;
-			b->stork.y--;
 		}
-		else if (deltaX < 0 && deltaY > 0)
+		
+		if (b->stork.y < b->frog.y)
 		{
-			b->stork.x++;
-			b->stork.y--;
-		}
-		else if (deltaX > 0 && deltaY < 0)
-		{
-			b->stork.x--;
 			b->stork.y++;
 		}
-		else if (deltaX < 0 && deltaY < 0)
+		else if (b->stork.y > b->frog.y)
 		{
-			b->stork.x++;
-			b->stork.y++;
+			b->stork.y--;
 		}
 
 		if (b->stork.x == b->frog.x && b->stork.y == b->frog.y)
@@ -948,6 +939,7 @@ GameState CreateGame()
 	game.timerHandler = &GameTimerHandler;
 	game.draw = &GameDraw;
 	game.done = &GameDone;
+	game.data = NULL;
 	return game;
 }
 
@@ -1171,8 +1163,7 @@ void GameOverDraw(GameState& self, WINDOW*win)
 void GameOverDone(GameState& self, void* initData)
 {
 	GameOverMessageData* data = (GameOverMessageData*)initData;
-	FILE* file;
-	file = fopen("best.txt", "w");
+	FILE* file = fopen("best.txt", "w");
 
 	for (int i = 0; i < 5; ++i)
 	{
@@ -1223,8 +1214,7 @@ void GameOverInit(GameState& self, void* initData)
 	data->index = 0;
 	self.data = data;
 
-	FILE* file;
-	file = fopen("best.txt", "r");
+	FILE* file = fopen("best.txt", "r");
 	if (file == NULL)
 	{
 		// if file do not exist
@@ -1270,6 +1260,7 @@ GameState CreateGameOver()
 	gameOver.timerHandler = &GameOverTimerHandler;
 	gameOver.draw = &GameOverDraw;
 	gameOver.done = &GameOverDone;
+	gameOver.data = NULL;
 	return gameOver;
 }
 
