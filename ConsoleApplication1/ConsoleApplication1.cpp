@@ -1,10 +1,10 @@
+#include <conio.h>
+#include <curses.h>
 #include <math.h>
 #include <stdio.h>
-#include <conio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <stdlib.h>
-#include <curses.h>
 
 // enums
 
@@ -875,9 +875,8 @@ void InitRoads(Board* board, int roadSize)
 
 void InitFrog(Board* board)
 {
-	board->frog = { board->width / 2, board->roadsSize - 1, 0 };
-	board->frog.car = NULL;
-	board->frog.onCar = false;
+	int x = rand() % board->width / 2;
+	board->frog = { x, board->roadsSize - 1, 0, NULL, false };
 }
 
 void InitCars(Board* board, int carsSize)
