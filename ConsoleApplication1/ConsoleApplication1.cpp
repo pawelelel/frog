@@ -98,6 +98,73 @@ enum CarType
 	Taxi = 2
 };
 
+// options
+
+struct CarOptions
+{
+	int speedUpFactor;
+	int speedUpChances;
+	int slowDownChances;
+	int returnChances;
+
+	int wrapChances;
+	int breakDistance;
+
+	int carsSize;
+};
+
+struct FrogOptions
+{
+	
+};
+
+struct StorkOptions
+{
+	int startX, startY;
+	float speed;
+};
+
+struct BoardOptions
+{
+	int width;
+};
+
+struct RoadOptions
+{
+	int roadSize;
+	int streets;
+	int grass;
+};
+
+struct BuildingOptions
+{
+	int buildingsSize;
+};
+
+struct ColorsOptions
+{
+
+};
+
+struct GeneralOptions
+{
+	int startScreenWidth, startScreenHeight;
+	int maxTime;
+};
+
+struct Options
+{
+	CarOptions car;
+	FrogOptions frog;
+	StorkOptions stork;
+	BoardOptions board;
+	RoadOptions road;
+	BuildingOptions building;
+	ColorsOptions colors;
+	GeneralOptions general;
+};
+
+
 // structs
 
 struct GameStateChange
@@ -108,12 +175,13 @@ struct GameStateChange
 
 struct GameState
 {
-	void (*init)(GameState&, void*);
+	void (*init)(GameState&, const Options*, void*);
 	GameStateChange(*keysHandler)(const GameState&, int);
-	GameStateChange(*timerHandler)(const GameState&, int);
+	GameStateChange(*timerHandler)(const GameState&, const Options*, int);
 	void (*draw)(const GameState&, WINDOW*);
 	void (*done)(GameState&, void*);
 
+	Options* options;
 	void* data;
 };
 
@@ -282,7 +350,7 @@ GameStateChange StartKeysHandler(const GameState& self, int key)
 	}
 }
 
-GameStateChange StartTimerHandler(const GameState& self, int time)
+GameStateChange StartTimerHandler(const GameState& self, const Options* options, int time)
 {
 	return { ChangeNoChange, NULL };
 }
@@ -328,15 +396,15 @@ void StartDone(GameState& self, void* initData)
 	//delete initData;
 }
 
-void StartInit(GameState& init, void* initData)
+void StartInit(GameState& init, const Options* options, void* initData)
 {
-	int col = 53, line = 23;
-	Resize(col, line);
+	Resize(init.options->general.startScreenWidth, init.options->general.startScreenHeight);
 }
 
-GameState CreateStart()
+GameState CreateStart(Options* options)
 {
 	GameState start;
+	start.options = options;
 	start.init = &StartInit;
 	start.keysHandler = &StartKeysHandler;
 	start.timerHandler = &StartTimerHandler;
@@ -468,26 +536,26 @@ bool IsFrogHitted(const Frog& f, const Car& c)
 	return false;
 }
 
-void ChangeCarSpeed(Car& c)
+void ChangeCarSpeed(Car& c, const CarOptions& options)
 {
 	// speed up cars
 	int speedChange = rand() % 100;
-	float speedUpFactor = 5.0f;
+	float speedUpFactor = options.speedUpFactor;
 
 	if (c.speedType == Normal)
 	{ // change car speed
-		if (speedChange < 10) // 10% of chances
+		if (speedChange < options.speedUpChances) // x% of chances
 		{ // speed up
 			c.speed *= speedUpFactor;
 			c.speedType = Fast;
 		}
-		else if (speedChange < 20) // 10% of chances
+		else if (speedChange < options.speedUpChances + options.slowDownChances) // x% of chances
 		{ // slow down
 			c.speed *= 1.0f / speedUpFactor;
 			c.speedType = Slow;
 		}
 	}
-	else if (speedChange < 1) // 1% of chances
+	else if (speedChange < options.returnChances) // x% of chances
 	{ // change it back
 		if (c.speedType == Slow)
 		{ // speed up
@@ -539,7 +607,7 @@ void ChangeCarRoad(const Board* b, Car& c)
 	delete[] streets;
 }
 
-GameStateChange MoveCars(Board* b, int deltaTime)
+GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 {
 	for (int i = 0; i < b->carsSize; ++i)
 	{
@@ -549,7 +617,7 @@ GameStateChange MoveCars(Board* b, int deltaTime)
 			case Left:
 			{
 				int distance = (int)round(c.x) - b->frog.x;
-				if (c.type == Friendly && 0 <= distance && distance <= 2 && c.roadNumber == b->frog.y)
+				if (c.type == Friendly && 0 <= distance && distance <= options->car.breakDistance && c.roadNumber == b->frog.y)
 				{
 					break;
 				}
@@ -563,9 +631,9 @@ GameStateChange MoveCars(Board* b, int deltaTime)
 
 				if (c.x <= 0)
 				{
-					bool wrap = rand() % 2;
+					int wrap = rand() % 100;
 
-					if (wrap)
+					if (wrap > options->car.wrapChances)
 					{
 						c.x = b->width - c.size + 1;
 					}
@@ -580,7 +648,7 @@ GameStateChange MoveCars(Board* b, int deltaTime)
 			case Right:
 			{
 				int distance = b->frog.x - (int)round(c.x);
-				if (c.type == Friendly && 0 <= distance && distance <= 2 && c.roadNumber == b->frog.y)
+				if (c.type == Friendly && 0 <= distance && distance <= options->car.breakDistance && c.roadNumber == b->frog.y)
 				{
 					break;
 				}
@@ -594,9 +662,9 @@ GameStateChange MoveCars(Board* b, int deltaTime)
 
 				if (c.x >= b->width)
 				{
-					bool wrap = rand() % 2;
+					int wrap = rand() % 100;
 
-					if (wrap)
+					if (wrap > options->car.wrapChances)
 					{
 						c.x = 1.0f - c.size;
 					}
@@ -609,7 +677,7 @@ GameStateChange MoveCars(Board* b, int deltaTime)
 			}
 		}
 
-		ChangeCarSpeed(c);
+		ChangeCarSpeed(c, options->car);
 
 		if (IsFrogHitted(b->frog, c))
 		{
@@ -655,7 +723,7 @@ GameStateChange StorkFly(Board* b, int deltaTime)
 	return { ChangeNoChange, NULL };
 }
 
-GameStateChange GameTimerHandler(const GameState& self, int time)
+GameStateChange GameTimerHandler(const GameState& self, const Options* options, int time)
 {
 	Board* b = (Board*)self.data;
 	b->frog.skin = time / 1000 % 2;
@@ -668,7 +736,7 @@ GameStateChange GameTimerHandler(const GameState& self, int time)
 
 	// move cars
 	int deltaTime = time - b->time;
-	GameStateChange change = MoveCars(b, deltaTime);
+	GameStateChange change = MoveCars(b, options, deltaTime);
 	if (change.message != ChangeNoChange)
 	{
 		return change;
@@ -725,7 +793,7 @@ void DrawBuildings(int upperStatusAreaSize, const Building* buildings, int build
 
 void DrawCar(const Board* board, int i, int UpperStatusAreaSize)
 {
-	constexpr char carsChars[4][4] = { "", "H", "HH", "HHH" };
+	const char carsChars[4][4] = { "", "H", "HH", "HHH" };
 	Car& c = board->cars[i];
 
 	move(c.roadNumber + UpperStatusAreaSize, (int)round(c.x));
@@ -797,11 +865,12 @@ void DrawHome(const Board* board, int UpperStatusAreaSize)
 
 void GameDraw(const GameState& self, WINDOW*win)
 {
-	constexpr int UpperStatusAreaSize = 1;
 	clear();
 
 	Board* board = (Board*)self.data;
 
+	// upper status area containing inforamtion about time and score
+	const int upperStatusAreaSize = 1; // TODO: rethink
 	printw("Time: %ds    Score: %d\n", board->time/1000, board->score);
 
 	// roads
@@ -827,20 +896,20 @@ void GameDraw(const GameState& self, WINDOW*win)
 	// cars
 	for (int i = 0; i < board->carsSize; ++i)
 	{
-		DrawCar(board, i, UpperStatusAreaSize);
+		DrawCar(board, i, upperStatusAreaSize);
 	}
 
 	// frog
-	DrawFrog(board, UpperStatusAreaSize);
+	DrawFrog(board, upperStatusAreaSize);
 
 	// buildings/obstacles
-	DrawBuildings(UpperStatusAreaSize, board->buildings, board->buildingsSize);
+	DrawBuildings(upperStatusAreaSize, board->buildings, board->buildingsSize);
 
 	// stork
-	DrawStork(board, UpperStatusAreaSize);
+	DrawStork(board, upperStatusAreaSize);
 
 	// home
-	DrawHome(board, UpperStatusAreaSize);
+	DrawHome(board, upperStatusAreaSize);
 
 	wrefresh(win);
 }
@@ -851,9 +920,11 @@ void GameDone(GameState& self, void* initData)
 	delete initData;
 }
 
-void InitRoads(Board* board, int roadSize)
+void InitRoads(Board* board, const Options* options)
 {
-	board->roadsSize = roadSize;
+	// TODO: Radnom
+
+	board->roadsSize = options->road.roadSize;
 	board->roads = new Road[board->roadsSize];
 	board->roads[0].type = Grass;
 	board->roads[1].type = Street;
@@ -883,9 +954,11 @@ void InitFrog(Board* board)
 	board->frog = { x, board->roadsSize - 1, 0, NULL, false };
 }
 
-void InitCars(Board* board, int carsSize)
+void InitCars(Board* board, const Options* options)
 {
-	board->carsSize = carsSize;
+	//TODO: random
+
+	board->carsSize = options->car.carsSize;
 	board->cars = new Car[board->carsSize];
 	board->cars[0] = { 3, 4.0f, -1, 1, Normal, Friendly };
 	board->cars[1] = { 2, 2.5f, -1, 2, Normal, Bad };
@@ -894,9 +967,11 @@ void InitCars(Board* board, int carsSize)
 	board->cars[4] = { 3, 8.0f, -1, 7, Normal, Friendly };
 }
 
-void InitBuildings(Board* board, int buildingsSize)
+void InitBuildings(Board* board, const Options* options)
 {
-	board->buildingsSize = buildingsSize;
+	// TODO: random
+
+	board->buildingsSize = options->building.buildingsSize;
 	board->buildings = new Building[board->buildingsSize];
 	board->buildings[0] = { 5, 3 };
 	board->buildings[1] = { 1, 3 };
@@ -905,36 +980,36 @@ void InitBuildings(Board* board, int buildingsSize)
 	board->buildings[4] = { 5, 8 };
 }
 
-void InitOtherVariables(Board* board)
+void InitOtherVariables(Board* board, const Options* options)
 {
 	int homeY = rand() % board->width;
 	board->home = { homeY, 0 };
 	board->score = 0;
 	board->time = 0;
-	board->maxTime = 100;
+	board->maxTime = options->general.maxTime;
 }
 
-void InitStork(Board* board)
+void InitStork(Board* board, const Options* options)
 {
-	board->stork = { 0, 0, 0.0f, 1.0f };
+	board->stork = { options->stork.startX, options->stork.startY, 0.0f, options->stork.speed };
 }
 
-void GameInit(GameState& self, void* initData)
+void GameInit(GameState& self, const Options* options, void* initData)
 {
 	Board* board = new Board;
-	board->width = 80;
+	board->width = options->board.width;
 
-	InitRoads(board, 10);
+	InitRoads(board, options);
 
 	InitFrog(board);
 
-	InitCars(board, 5);
+	InitCars(board, options);
 
-	InitBuildings(board, 5);
+	InitBuildings(board, options);
 
-	InitOtherVariables(board);
+	InitOtherVariables(board, options);
 
-	InitStork(board);
+	InitStork(board, options);
 
 	int cols = board->width + 1;
 	int lines = board->roadsSize + 2;
@@ -944,9 +1019,10 @@ void GameInit(GameState& self, void* initData)
 	self.data = board;
 }
 
-GameState CreateGame()
+GameState CreateGame(Options* options)
 {
 	GameState game;
+	game.options = options;
 	game.init = &GameInit;
 	game.keysHandler = &GameKeysHandler;
 	game.timerHandler = &GameTimerHandler;
@@ -987,17 +1063,15 @@ GameStateChange GameOverKeysHandler(const GameState& self, int key)
 		}
 		case '<':
 		{
-				if (!data->enter)
+			if (!data->enter)
+			{
+				data->str[--data->index] = '\0';
+
+				if (data->index < 0)
 				{
-					data->str[--data->index] = '\0';
-
-					if (data->index < 0)
-					{
-						data->index = 0;
-					}
+					data->index = 0;
 				}
-			
-
+			}
 			return { ChangeNoChange, NULL };
 		}
 	default: break;
@@ -1015,7 +1089,7 @@ GameStateChange GameOverKeysHandler(const GameState& self, int key)
 	return { ChangeNoChange, NULL };
 }
 
-GameStateChange GameOverTimerHandler(const GameState& self, int time)
+GameStateChange GameOverTimerHandler(const GameState& self, const Options* options, int time)
 {
 	return { ChangeNoChange, NULL };
 }
@@ -1182,6 +1256,11 @@ void GameOverDone(GameState& self, void* initData)
 	GameOverMessageData* data = (GameOverMessageData*)initData;
 	FILE* file = fopen("best.txt", "w");
 
+	if (file == NULL)
+	{
+		return;
+	}
+
 	for (int i = 0; i < 5; ++i)
 	{
 		if (strcmp(data->players[i].name, "---") == 0)
@@ -1223,7 +1302,7 @@ void InsertYou(GameOverMessageData* data)
 	strcpy(data->players[0].name, "You");
 }
 
-void GameOverInit(GameState& self, void* initData)
+void GameOverInit(GameState& self, const Options* options, void* initData)
 {
 	GameOverMessageData* data = (GameOverMessageData*)initData;
 	data->enter = false;
@@ -1269,9 +1348,10 @@ void GameOverInit(GameState& self, void* initData)
 	Resize(56, 45);
 }
 
-GameState CreateGameOver()
+GameState CreateGameOver(Options* options)
 {
 	GameState gameOver;
+	gameOver.options = options;
 	gameOver.init = &GameOverInit;
 	gameOver.keysHandler = &GameOverKeysHandler;
 	gameOver.timerHandler = &GameOverTimerHandler;
@@ -1291,7 +1371,7 @@ int ReadKeys()
 	return NULL;
 }
 
-GameStateChange MainLoop(const GameState& current, WINDOW* win)
+GameStateChange MainLoop(const GameState& current, const Options* options, WINDOW* win)
 {
 	clock_t startTime = clock();
 	while (true)
@@ -1310,7 +1390,7 @@ GameStateChange MainLoop(const GameState& current, WINDOW* win)
 
 		clock_t now = clock();
 		int time = (now - startTime) * 1000 / CLOCKS_PER_SEC;
-		change = current.timerHandler(current, time);
+		change = current.timerHandler(current, options, time);
 		if (change.message != ChangeNoChange)
 		{
 			return change;
@@ -1320,21 +1400,52 @@ GameStateChange MainLoop(const GameState& current, WINDOW* win)
 	}
 }
 
+Options* CreateOptions()
+{
+	Options* options = new Options;
+	options->general.startScreenWidth = 53;
+	options->general.startScreenHeight = 23;
+	options->general.maxTime = 100;
+
+	options->car.speedUpFactor = 5.0f;
+	options->car.speedUpChances = 10;
+	options->car.slowDownChances = 10;
+	options->car.returnChances = 10;
+	options->car.wrapChances = 50;
+	options->car.breakDistance = 2;
+	options->car.carsSize = 5;
+
+	options->road.roadSize = 10;
+
+	options->building.buildingsSize = 5;
+
+	options->stork.startX = 0;
+	options->stork.startY = 0;
+	options->stork.speed = 1.0f;
+
+	options->board.width = 80;
+
+
+	return options;
+}
+
 int main()
 {
 	srand(time(NULL));  // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
 	WINDOW* win = InitWindow();
 
-	GameState Start = CreateStart();
-	GameState Game = CreateGame();
-	GameState GameOver = CreateGameOver();
+	Options* options = CreateOptions();
+
+	GameState Start = CreateStart(options);
+	GameState Game = CreateGame(options);
+	GameState GameOver = CreateGameOver(options);
 
 	GameState current = Start;
-	current.init(current, NULL);
+	current.init(current, options, NULL);
 	
 	while (true)
 	{
-		GameStateChange change = MainLoop(current, win);
+		GameStateChange change = MainLoop(current, options, win);
 		current.done(current, current.data);
 		switch (change.message)
 		{
@@ -1360,7 +1471,7 @@ int main()
 			case ChangeNoChange:
 				break;
 		}
-		current.init(current, change.data);
+		current.init(current, options, change.data);
 	}
 }
 
