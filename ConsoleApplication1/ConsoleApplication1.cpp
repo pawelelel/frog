@@ -7,6 +7,7 @@
 // ReSharper disable CppClangTidyConcurrencyMtUnsafe
 // ReSharper disable CppClangTidyPerformanceTypePromotionInMathFn
 // ReSharper disable CppZeroConstantCanBeReplacedWithNullptr
+// ReSharper disable CppClangTidyModernizeDeprecatedHeaders
 #include <conio.h>
 #include <curses.h>
 #include <math.h>
@@ -196,7 +197,7 @@ void InitColor(short colorId, int r, int g, int b)
 	g = g * 200 / 51;
 	b = b * 200 / 51;
 
-	init_color(colorId, r, g, b);
+	init_color(colorId, (short)r, (short)g, (short)b);
 }
 
 void InitColorPair(short pairId, short colorFont, short colorBack)
@@ -342,7 +343,7 @@ GameState CreateStart()
 
 // Game
 
-bool IsFrogInHome(Frog& frog, Home& home)
+bool IsFrogInHome(const Frog& frog, const Home& home)
 {
 	if (frog.x == home.x && frog.y == home.y)
 	{
@@ -351,7 +352,7 @@ bool IsFrogInHome(Frog& frog, Home& home)
 	return false;
 }
 
-bool CanFrogJump(int newX, int newY, Board* b)
+bool CanFrogJump(int newX, int newY, const Board* b)
 {
 	if (newY < 0)
 	{
@@ -441,6 +442,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 			}
 			break;
 		}
+	default: break;
 	}
 
 	if (jump && IsFrogInHome(board->frog, board->home))
@@ -633,7 +635,7 @@ GameStateChange GameTimerHandler(GameState& self, int time)
 
 	if (b->frog.onCar)
 	{
-		b->frog.x = b->frog.car->x;
+		b->frog.x = (int)round(b->frog.car->x);
 		b->frog.y = b->frog.car->roadNumber;
 	}
 
@@ -699,7 +701,7 @@ void DrawCar(Board* board, int i, int UpperStatusAreaSize)
 	const char carsChars[4][4] = { "", "H", "HH", "HHH" };
 	Car& c = board->cars[i];
 
-	move(c.roadNumber + UpperStatusAreaSize, c.x);
+	move(c.roadNumber + UpperStatusAreaSize, (int)round(c.x));
 	switch (board->roads[c.roadNumber].direction)
 	{
 		case Left:
@@ -987,13 +989,14 @@ GameStateChange GameOverKeysHandler(GameState& self, int key)
 
 			return { ChangeNoChange, NULL };
 		}
+	default: break;
 	}
 
 	if (key >= 'a' && key <= 'z')
 	{
 		if (data->index < 10)
 		{
-			data->str[data->index] = key;
+			data->str[data->index] = char(key);
 			data->index++;
 			return { ChangeNoChange, NULL };
 		}
@@ -1344,3 +1347,9 @@ int main()
 		current.init(current, change.data);
 	}
 }
+
+// dodac referencje
+// zmienic niech "x" zawsze oznacza szybe: dla samochodow jadacych w prawo zmienic rysowanie oraz zatrzymanie przed zaba
+// zaba nie moze skoczyc jesli ma samochod w kierunku ruchu
+// w funkcji GameDraw rysowanie zaby wyniesc do osobnej funkcji
+// przy delete zrzutowac wskaznik przed delete
