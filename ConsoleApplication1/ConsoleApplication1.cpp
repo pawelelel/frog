@@ -325,7 +325,7 @@ void StartDone(GameState& self, void* initData)
 {
 	// uncomment if start has any initdata
 	//delete self.data;
-	//delete initData;
+	delete initData;
 }
 
 void StartInit(GameState& init, void* initData)
@@ -1183,7 +1183,7 @@ void GameOverDone(GameState& self, void* initData)
 
 	fclose(file);
 
-	delete initData;
+	delete data;
 }
 
 void InsertYou(GameOverMessageData* data)
@@ -1300,7 +1300,7 @@ GameStateChange MainLoop(const GameState& current, WINDOW* win)
 
 int main()
 {
-	srand(time(NULL));
+	srand(time(NULL));  // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
 	WINDOW* win = InitWindow();
 
 	GameState Start = CreateStart();
