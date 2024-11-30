@@ -35,6 +35,7 @@ enum ColorPairs
 	GrassGreen_Black = 10,
 	Red_Black = 10,
 	Green_Black = 11,
+	Red_White = 12,
 };
 
 enum Colors
@@ -248,6 +249,7 @@ WINDOW* InitWindow()
 		InitColorPair(GrassGreen_Black, GrassGreen, Black);
 		InitColorPair(Red_Black, Red, Black);
 		InitColorPair(Green_Black, Green, Black);
+		InitColorPair(Red_White, Red, White);
 	}
 
 	return win;
@@ -355,7 +357,7 @@ bool IsFrogInHome(const Frog& frog, const Home& home)
 	return false;
 }
 
-bool CanFrogJump(int newX, int newY, const Board* b)
+bool CanFrogJump(const int newX, const int newY, const Board* b)
 {
 	if (newY < 0)
 	{
@@ -552,7 +554,7 @@ GameStateChange MoveCars(Board* b, int deltaTime)
 			}
 			case Right:
 			{
-				int distance = b->frog.x - (int)round(c.x) + c.size;
+				int distance = b->frog.x - (int)round(c.x);
 				if (c.type == Friendly && 0 <= distance && distance <= 2 && c.roadNumber == b->frog.y)
 				{
 					break;
@@ -705,73 +707,70 @@ void DrawCar(const Board* board, int i, int UpperStatusAreaSize)
 	Car& c = board->cars[i];
 
 	move(c.roadNumber + UpperStatusAreaSize, (int)round(c.x));
-	switch (board->roads[c.roadNumber].direction)
-	{
-		case Left:
-		{
-			StartPair(Window_Black);
-			printw("<");
-			EndPair(Window_Black);
+	StartPair(Window_Black);
+	printw("X");
+	EndPair(Window_Black);
 
-			switch (c.type)
-			{
-				case Friendly:
-				{
-					StartPair(Green_Black);
-					printw(carsChars[c.size]);
-					EndPair(Green_Black);
-					break;
-				}
-				case Bad:
-				{
-					StartPair(Red_Black);
-					printw(carsChars[c.size]);
-					EndPair(Red_Black);
-					break;
-				}
-				case Taxi:
-				{
-					StartPair(Yellow_Black);
-					printw(carsChars[c.size]);
-					EndPair(Yellow_Black);
-					break;
-				}
-			}
+	if(board->roads[c.roadNumber].direction == Right)
+	{
+		move(c.roadNumber + UpperStatusAreaSize, (int)round(c.x) - c.size);
+	}
+
+	switch (c.type)
+	{
+		case Friendly:
+		{
+			StartPair(Green_Black);
+			printw(carsChars[c.size]);
+			EndPair(Green_Black);
 			break;
 		}
-		case Right:
+		case Bad:
 		{
-			switch (c.type)
-			{
-			case Friendly:
-			{
-				StartPair(Green_Black);
-				printw(carsChars[c.size]);
-				EndPair(Green_Black);
-				break;
-			}
-			case Bad:
-			{
-				StartPair(Red_Black);
-				printw(carsChars[c.size]);
-				EndPair(Red_Black);
-				break;
-			}
-			case Taxi:
-			{
-				StartPair(Yellow_Black);
-				printw(carsChars[c.size]);
-				EndPair(Yellow_Black);
-				break;
-			}
-			}
-
-			StartPair(Window_Black);
-			printw(">");
-			EndPair(Window_Black);
+			StartPair(Red_Black);
+			printw(carsChars[c.size]);
+			EndPair(Red_Black);
+			break;
+		}
+		case Taxi:
+		{
+			StartPair(Yellow_Black);
+			printw(carsChars[c.size]);
+			EndPair(Yellow_Black);
 			break;
 		}
 	}
+}
+
+void DrawFrog(const Board* board, int UpperStatusAreaSize)
+{
+	move(board->frog.y + UpperStatusAreaSize, board->frog.x);
+	StartPair(FrogGreen_Black);
+	if (board->frog.skin == 0)
+	{
+		printw("F");
+	}
+	else
+	{
+		printw("f");
+	}
+	EndPair(FrogGreen_Black);
+}
+
+void DrawStork(const Board* board, int UpperStatusAreaSize)
+{
+	StartPair(Red_White);
+	move(board->stork.y + UpperStatusAreaSize, board->stork.x);
+	printw("S");
+	EndPair(Red_White);
+}
+
+void DrawHome(const Board* board, int UpperStatusAreaSize)
+{
+	move(board->home.y + UpperStatusAreaSize, board->home.x);
+	StartPair(Black_Brick);
+	printw("H");
+	EndPair(Black_Brick);
 }
 
 void GameDraw(const GameState& self, WINDOW*win)
@@ -809,30 +808,17 @@ void GameDraw(const GameState& self, WINDOW*win)
 		DrawCar(board, i, UpperStatusAreaSize);
 	}
 
-	move(board->frog.y + UpperStatusAreaSize, board->frog.x);
+	// frog
+	DrawFrog(board, UpperStatusAreaSize);
 
-	StartPair(FrogGreen_Black);
-	if (board->frog.skin == 0)
-	{
-		printw("F");
-	}
-	else
-	{
-		printw("f");
-	}
-	EndPair(FrogGreen_Black);
-
+	// buildings/obstacles
 	DrawBuildings(UpperStatusAreaSize, board->buildings, board->buildingsSize);
 
-	StartPair(Red_Black);
-	move(board->stork.y + UpperStatusAreaSize, board->stork.x);
-	printw("S");
-	EndPair(Red_Black);
+	// stork
+	DrawStork(board, UpperStatusAreaSize);
 
-	move(board->home.y + UpperStatusAreaSize, board->home.x);
-	StartPair(Black_Brick);
-	printw("H");
-	EndPair(Black_Brick);
+	// home
+	DrawHome(board, UpperStatusAreaSize);
 
 	wrefresh(win);
 }
@@ -1357,7 +1343,4 @@ int main()
 }
 
 // dodac referencje
-// zmienic niech "x" zawsze oznacza szybe: dla samochodow jadacych w prawo zmienic rysowanie oraz zatrzymanie przed zaba
-// zaba nie moze skoczyc jesli ma samochod w kierunku ruchu
-// w funkcji GameDraw rysowanie zaby wyniesc do osobnej funkcji
 // przy delete zrzutowac wskaznik przed delete
