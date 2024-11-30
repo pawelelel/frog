@@ -8,6 +8,9 @@
 // ReSharper disable CppClangTidyPerformanceTypePromotionInMathFn
 // ReSharper disable CppZeroConstantCanBeReplacedWithNullptr
 // ReSharper disable CppClangTidyModernizeDeprecatedHeaders
+// ReSharper disable CppFunctionalStyleCast
+// ReSharper disable CppClangTidyModernizeLoopConvert
+// ReSharper disable CppClangTidyCertErr34C
 #include <conio.h>
 #include <curses.h>
 #include <math.h>
@@ -105,9 +108,9 @@ struct GameStateChange
 struct GameState
 {
 	void (*init)(GameState&, void*);
-	GameStateChange(*keysHandler)(GameState&, int);
-	GameStateChange(*timerHandler)(GameState&, int);
-	void (*draw)(GameState&, WINDOW*);
+	GameStateChange(*keysHandler)(const GameState&, int);
+	GameStateChange(*timerHandler)(const GameState&, int);
+	void (*draw)(const GameState&, WINDOW*);
 	void (*done)(GameState&, void*);
 
 	void* data;
@@ -258,7 +261,7 @@ void Resize(int cols, int lines)
 
 // Start
 
-GameStateChange StartKeysHandler(GameState& self, int key)
+GameStateChange StartKeysHandler(const GameState& self, int key)
 {
 	switch (key)
 	{
@@ -277,7 +280,7 @@ GameStateChange StartKeysHandler(GameState& self, int key)
 	}
 }
 
-GameStateChange StartTimerHandler(GameState& self, int time)
+GameStateChange StartTimerHandler(const GameState& self, int time)
 {
 	return { ChangeNoChange, NULL };
 }
@@ -292,7 +295,7 @@ void DrawStartFrog()
 	printw("                )_/ /|\\   /|\\ \\_(                   \n");
 }
 
-void StartDraw(GameState& self, WINDOW* win)
+void StartDraw(const GameState& self, WINDOW* win)
 {
 	clear();
 	StartPair(FrogGreen_Black);
@@ -381,7 +384,7 @@ bool CanFrogJump(int newX, int newY, const Board* b)
 	return true;
 }
 
-GameStateChange GameKeysHandler(GameState& self, int key)
+GameStateChange GameKeysHandler(const GameState& self, int key)
 {
 	Board* board = (Board*)self.data;
 	bool jump = false;
@@ -454,7 +457,7 @@ GameStateChange GameKeysHandler(GameState& self, int key)
 	return { ChangeNoChange, NULL };
 }
 
-bool IsFrogHitted(Frog& f, Car& c)
+bool IsFrogHitted(const Frog& f, const Car& c)
 {
 	if (c.type == Bad && !f.onCar && f.x == (int)round(c.x) && f.y == c.roadNumber)
 	{
@@ -628,7 +631,7 @@ GameStateChange StorkFly(Board* b, int deltaTime)
 	return { ChangeNoChange, NULL };
 }
 
-GameStateChange GameTimerHandler(GameState& self, int time)
+GameStateChange GameTimerHandler(const GameState& self, int time)
 {
 	Board* b = (Board*)self.data;
 	b->frog.skin = time / 1000 % 2;
@@ -684,7 +687,7 @@ void DrawGrass(int width)
 	EndPair(GrassGreen_GrassGreen);
 }
 
-void DrawBuildings(int upperStatusAreaSize, Building* buildings, int buildingsSize)
+void DrawBuildings(int upperStatusAreaSize, const Building* buildings, int buildingsSize)
 {
 	for (int i = 0; i < buildingsSize; ++i)
 	{
@@ -696,9 +699,9 @@ void DrawBuildings(int upperStatusAreaSize, Building* buildings, int buildingsSi
 	}
 }
 
-void DrawCar(Board* board, int i, int UpperStatusAreaSize)
+void DrawCar(const Board* board, int i, int UpperStatusAreaSize)
 {
-	const char carsChars[4][4] = { "", "H", "HH", "HHH" };
+	constexpr char carsChars[4][4] = { "", "H", "HH", "HHH" };
 	Car& c = board->cars[i];
 
 	move(c.roadNumber + UpperStatusAreaSize, (int)round(c.x));
@@ -771,9 +774,9 @@ void DrawCar(Board* board, int i, int UpperStatusAreaSize)
 	}
 }
 
-void GameDraw(GameState& self, WINDOW*win)
+void GameDraw(const GameState& self, WINDOW*win)
 {
-	const int UpperStatusAreaSize = 1;
+	constexpr int UpperStatusAreaSize = 1;
 	clear();
 
 	Board* board = (Board*)self.data;
@@ -947,11 +950,11 @@ GameState CreateGame()
 
 // Game over
 
-GameStateChange GameOverKeysHandler(GameState& self, int key)
+GameStateChange GameOverKeysHandler(const GameState& self, int key)
 {
 	GameOverMessageData* data = (GameOverMessageData*)self.data;
 
-	if ((!data->won || !(data->players[4].score < data->score)) && key == 'q')
+	if ((!data->won || data->players[4].score >= data->score) && key == 'q')
 	{
 		return { ChangeToStart, NULL };
 	}
@@ -1004,7 +1007,7 @@ GameStateChange GameOverKeysHandler(GameState& self, int key)
 	return { ChangeNoChange, NULL };
 }
 
-GameStateChange GameOverTimerHandler(GameState& self, int time)
+GameStateChange GameOverTimerHandler(const GameState& self, int time)
 {
 	return { ChangeNoChange, NULL };
 }
@@ -1077,14 +1080,17 @@ void DrawYouWon2(GameOverMessageData* data)
 {
 	StartPair(Brick_Black); printw("       |  |      |             "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("(.)_(.)"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("          |\n"); EndPair(Brick_Black);
 	StartPair(Brick_Black); printw("       |  |      |          "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("_ (  ,_,  ) _"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("       |\n"); EndPair(Brick_Black);
-	StartPair(Brick_Black); printw("       |  |    o |         "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("/ \\/`-----'\\/ \\"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("      |\n"); EndPair(Brick_Black);
+	StartPair(Brick_Black); printw("       |  |    o |         "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(
+		R"(/ \/`-----'\/ \)"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("      |\n"); EndPair(Brick_Black);
 	StartPair(Brick_Black); printw("       |  |      |       "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw("__\\ ( (     ) ) /__"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("    |\n"); EndPair(Brick_Black);
 }
 
 void DrawYouWon3(GameOverMessageData* data)
 {
-	StartPair(Brick_Black); printw("       |  |      |       "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(")   /\\ \\._./ /\\   ("); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("    |\n"); EndPair(Brick_Black);
-	StartPair(Brick_Black); printw("       |  |      |        "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(")_/ /|\\   /|\\ \\_("); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("     |\n"); EndPair(Brick_Black);
+	StartPair(Brick_Black); printw("       |  |      |       "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(
+		R"()   /\ \._./ /\   ()"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("    |\n"); EndPair(Brick_Black);
+	StartPair(Brick_Black); printw("       |  |      |        "); EndPair(Brick_Black); StartPair(FrogGreen_Black); printw(
+		R"()_/ /|\   /|\ \_()"); EndPair(FrogGreen_Black); StartPair(Brick_Black); printw("     |\n"); EndPair(Brick_Black);
 	StartPair(GrassGreen_Black); DrawStr("~", 55); EndPair(GrassGreen_Black);
 	printw("                    Your score: %d\n", data->score);
 
@@ -1132,7 +1138,7 @@ void DrawYouLost3(GameOverMessageData* data)
 	StartPair(FrogBlood_FrogBlood); printw("-------------------------"); EndPair(FrogBlood_FrogBlood); StartPair(RoadGray_RoadGray); printw("------------------------------\n\n"); EndPair(RoadGray_RoadGray);
 }
 
-void GameOverDraw(GameState& self, WINDOW*win)
+void GameOverDraw(const GameState& self, WINDOW*win)
 {
 	GameOverMessageData* data = (GameOverMessageData*)self.data;
 
@@ -1145,7 +1151,7 @@ void GameOverDraw(GameState& self, WINDOW*win)
 
 		DrawTable(data);
 
-		if (data->enter || !(data->players[4].score < data->score))
+		if (data->enter || data->players[4].score >= data->score)
 		{
 			printw("                 q => quit to main menu\n");
 		}
@@ -1235,7 +1241,7 @@ void GameOverInit(GameState& self, void* initData)
 
 		for (int i = 0; i < 5; ++i)
 		{
-			int a = fscanf(file, "%s\n", &data->players[i].name);
+			int a = fscanf(file, "%s\n", data->players[i].name);
 			if (strcmp(data->players[i].name, "(null)") == 0 || a != 1)
 			{
 				strcpy(data->players[i].name, "---\0");
@@ -1277,7 +1283,7 @@ int ReadKeys()
 	return NULL;
 }
 
-GameStateChange MainLoop(GameState& current, WINDOW* win)
+GameStateChange MainLoop(const GameState& current, WINDOW* win)
 {
 	clock_t startTime = clock();
 	while (true)
@@ -1343,6 +1349,8 @@ int main()
 			{
 				return 0;
 			}
+			case ChangeNoChange:
+				break;
 		}
 		current.init(current, change.data);
 	}
