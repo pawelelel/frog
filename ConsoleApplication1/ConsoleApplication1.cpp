@@ -935,6 +935,33 @@ void InitRoads(Board* board, const Options* options)
 
 	board->roadsSize = options->road.roadSize;
 	board->roads = new Road[board->roadsSize];
+
+	board->roads[0].type = Grass;
+	for (int i = 1; i < board->roadsSize - 1; ++i)
+	{
+		board->roads[i].direction = Direction(rand() % 2);
+		board->roads[i].type = RoadType(rand() % 2);
+	}
+	board->roads[board->roadsSize - 1].type = Grass;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/*
+
+
+
+
 	board->roads[0].type = Grass;
 	board->roads[1].type = Street;
 	board->roads[2].type = Street;
@@ -954,7 +981,7 @@ void InitRoads(Board* board, const Options* options)
 	for (int i = board->roadsSize / 2; i < board->roadsSize; ++i)
 	{
 		board->roads[i].direction = Left;
-	}
+	}*/
 }
 
 void InitFrog(Board* board)
