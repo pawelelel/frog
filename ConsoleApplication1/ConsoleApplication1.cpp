@@ -945,21 +945,7 @@ void InitRoads(Board* board, const Options* options)
 	board->roads[board->roadsSize - 1].type = Grass;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 	/*
-
-
 
 
 	board->roads[0].type = Grass;
@@ -996,11 +982,73 @@ void InitCars(Board* board, const Options* options)
 
 	board->carsSize = options->car.carsSize;
 	board->cars = new Car[board->carsSize];
-	board->cars[0] = { 3, 4.0f, -1, 1, Normal, Friendly };
-	board->cars[1] = { 2, 2.5f, -1, 2, Normal, Bad };
+
+
+
+
+
+
+	int numberOfStreets = 0;
+	for (int i = 0; i < board->roadsSize; ++i)
+	{
+		if (board->roads[i].type == Street)
+		{
+			numberOfStreets++;
+		}
+	}
+	int* streets = new int[numberOfStreets];
+	int index = 0;
+	for (int i = 0; i < board->roadsSize; ++i)
+	{
+		if (board->roads[i].type == Street)
+		{
+			streets[index] = i;
+			index++;
+		}
+	}
+
+
+	for (int i = 0; i < board->carsSize; ++i)
+	{
+		board->cars[i].size = rand() % 3 + 1;
+		board->cars[i].speed = rand() % (10 + 1 - 2) + 2;
+		board->cars[i].x = 0;
+		board->cars[i].roadNumber = streets[rand() % numberOfStreets];
+		board->cars[i].speedType = Normal;
+		board->cars[i].type = CarType(rand() % 3);
+	}
+
+
+
+
+
+
+
+
+
+
+
+	/*
+
+
+
+
+
+
+	board->cars[0] = { 3, 4.0f, 0, 1, Normal, Friendly };
+	board->cars[1] = { 2, 2.5f, 0, 2, Normal, Bad };
 	board->cars[2] = { 1, 2.7f, 0, 5, Normal, Bad };
-	board->cars[3] = { 2, 5.5f, -1, 6, Normal, Taxi };
-	board->cars[4] = { 3, 8.0f, -1, 7, Normal, Friendly };
+	board->cars[3] = { 2, 5.5f, 0, 6, Normal, Taxi };
+	board->cars[4] = { 3, 8.0f, 0, 7, Normal, Friendly };*/
+
+
+
+
+
+
+
+
+	delete[] streets;
 }
 
 void InitBuildings(Board* board, const Options* options)
@@ -1449,7 +1497,7 @@ Options* CreateOptions()
 	options->car.returnChances = 10;
 	options->car.wrapChances = 50;
 	options->car.breakDistance = 2;
-	options->car.carsSize = 5;
+	options->car.carsSize = 10;
 
 	options->road.roadSize = 10;
 
