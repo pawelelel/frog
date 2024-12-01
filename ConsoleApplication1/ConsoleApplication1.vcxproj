@@ -183,6 +183,7 @@
     <ClCompile Include="wincon\pdcutil.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="frog.config" />
     <None Include="pdcurses\README.md" />
   </ItemGroup>
   <ItemGroup>

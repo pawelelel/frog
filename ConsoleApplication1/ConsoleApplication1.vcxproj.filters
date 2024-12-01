@@ -164,6 +164,7 @@
     <None Include="pdcurses\README.md">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="frog.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pdcurses\curses.h">
