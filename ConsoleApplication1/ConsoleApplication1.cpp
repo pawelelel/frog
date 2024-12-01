@@ -931,8 +931,6 @@ void GameDone(GameState& self, const Options* options, void* initData)
 
 void InitRoads(Board* board, const Options* options)
 {
-	// TODO: Radnom
-
 	board->roadsSize = options->road.roadSize;
 	board->roads = new Road[board->roadsSize];
 
@@ -978,15 +976,8 @@ void InitFrog(Board* board)
 
 void InitCars(Board* board, const Options* options)
 {
-	//TODO: random
-
 	board->carsSize = options->car.carsSize;
 	board->cars = new Car[board->carsSize];
-
-
-
-
-
 
 	int numberOfStreets = 0;
 	for (int i = 0; i < board->roadsSize; ++i)
@@ -1007,7 +998,6 @@ void InitCars(Board* board, const Options* options)
 		}
 	}
 
-
 	for (int i = 0; i < board->carsSize; ++i)
 	{
 		board->cars[i].size = rand() % 3 + 1;
@@ -1018,35 +1008,13 @@ void InitCars(Board* board, const Options* options)
 		board->cars[i].type = CarType(rand() % 3);
 	}
 
-
-
-
-
-
-
-
-
-
-
 	/*
-
-
-
-
-
-
 	board->cars[0] = { 3, 4.0f, 0, 1, Normal, Friendly };
 	board->cars[1] = { 2, 2.5f, 0, 2, Normal, Bad };
 	board->cars[2] = { 1, 2.7f, 0, 5, Normal, Bad };
 	board->cars[3] = { 2, 5.5f, 0, 6, Normal, Taxi };
-	board->cars[4] = { 3, 8.0f, 0, 7, Normal, Friendly };*/
-
-
-
-
-
-
-
+	board->cars[4] = { 3, 8.0f, 0, 7, Normal, Friendly };
+	*/
 
 	delete[] streets;
 }
@@ -1057,11 +1025,41 @@ void InitBuildings(Board* board, const Options* options)
 
 	board->buildingsSize = options->building.buildingsSize;
 	board->buildings = new Building[board->buildingsSize];
+
+	int numberOfGrass = 0;
+	for (int i = 0; i < board->roadsSize; ++i)
+	{
+		if (board->roads[i].type == Grass)
+		{
+			numberOfGrass++;
+		}
+	}
+	int* grass = new int[numberOfGrass];
+	int index = 0;
+	for (int i = 0; i < board->roadsSize; ++i)
+	{
+		if (board->roads[i].type == Grass)
+		{
+			grass[index] = i;
+			index++;
+		}
+	}
+
+	for (int i = 0; i < board->buildingsSize; ++i)
+	{
+		board->buildings[i].x = rand() % board->width;
+		board->buildings[i].roadNumber = grass[rand() % numberOfGrass];
+	}
+
+	delete[] grass;
+
+	/*
 	board->buildings[0] = { 5, 3 };
 	board->buildings[1] = { 1, 3 };
 	board->buildings[2] = { 5, 4 };
 	board->buildings[3] = { 4, 4 };
 	board->buildings[4] = { 5, 8 };
+	*/
 }
 
 void InitOtherVariables(Board* board, const Options* options)
@@ -1501,7 +1499,7 @@ Options* CreateOptions()
 
 	options->road.roadSize = 10;
 
-	options->building.buildingsSize = 5;
+	options->building.buildingsSize = 10;
 
 	options->stork.startX = 0;
 	options->stork.startY = 0;
