@@ -152,6 +152,11 @@ struct GeneralOptions
 	int maxTime;
 };
 
+struct FilesOptions
+{
+	char const* bestScoresFileName;
+};
+
 struct Options
 {
 	CarOptions car;
@@ -162,6 +167,7 @@ struct Options
 	BuildingOptions building;
 	ColorsOptions colors;
 	GeneralOptions general;
+	FilesOptions files;
 
 	bool useSeed;
 	int seed;
@@ -182,7 +188,7 @@ struct GameState
 	GameStateChange(*keysHandler)(const GameState&, int);
 	GameStateChange(*timerHandler)(const GameState&, const Options*, int);
 	void (*draw)(const GameState&, WINDOW*);
-	void (*done)(GameState&, void*);
+	void (*done)(GameState&, const Options*, void*);
 
 	Options* options;
 	void* data;
@@ -392,7 +398,7 @@ void StartDraw(const GameState& self, WINDOW* win)
 	wrefresh(win);
 }
 
-void StartDone(GameState& self, void* initData)
+void StartDone(GameState& self, const Options* options, void* initData)
 {
 	// uncomment if start has any initdata
 	//delete self.data;
@@ -917,7 +923,7 @@ void GameDraw(const GameState& self, WINDOW*win)
 	wrefresh(win);
 }
 
-void GameDone(GameState& self, void* initData)
+void GameDone(GameState& self, const Options* options, void* initData)
 {
 	//delete self.data;
 	delete initData;
@@ -1254,10 +1260,10 @@ void GameOverDraw(const GameState& self, WINDOW*win)
 	wrefresh(win);
 }
 
-void GameOverDone(GameState& self, void* initData)
+void GameOverDone(GameState& self, const Options* options, void* initData)
 {
 	GameOverMessageData* data = (GameOverMessageData*)initData;
-	FILE* file = fopen("best.txt", "w");
+	FILE* file = fopen(options->files.bestScoresFileName, "w");
 
 	if (file == NULL)
 	{
@@ -1313,7 +1319,7 @@ void GameOverInit(GameState& self, const Options* options, void* initData)
 	data->index = 0;
 	self.data = data;
 
-	FILE* file = fopen("best.txt", "r");
+	FILE* file = fopen(options->files.bestScoresFileName, "r");
 	if (file == NULL)
 	{
 		// if file do not exist
@@ -1431,6 +1437,8 @@ Options* CreateOptions()
 	options->useSeed = false;
 	options->seed = 1;
 
+	options->files.bestScoresFileName = "best.txt";
+
 	return options;
 }
 
@@ -1459,7 +1467,7 @@ int main()
 	while (true)
 	{
 		GameStateChange change = MainLoop(current, options, win);
-		current.done(current, current.data);
+		current.done(current, options, current.data);
 		switch (change.message)
 		{
 			case ChangeToStart:
