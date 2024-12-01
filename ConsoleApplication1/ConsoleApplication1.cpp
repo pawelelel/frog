@@ -110,7 +110,7 @@ struct CarOptions
 	int wrapChances;
 	int breakDistance;
 
-	int carsSize;
+	int carsNumber;
 };
 
 struct FrogOptions
@@ -131,14 +131,14 @@ struct BoardOptions
 
 struct RoadOptions
 {
-	int roadSize;
+	int roadNumber;
 	int streets;
 	int grass;
 };
 
 struct BuildingOptions
 {
-	int buildingsSize;
+	int buildingsNumber;
 };
 
 struct ColorsOptions
@@ -258,15 +258,15 @@ struct Board
 	Frog frog;
 	Road* roads;
 	Home home;
-	int roadsSize;
+	int roadsNumber;
 	int width;
 	int score;
 	int time; // in miliseconds
 	int maxTime;// in seconds
 	Car* cars;
-	int carsSize;
+	int carsNumber;
 	Building* buildings;
-	int buildingsSize;
+	int buildingsNumber;
 	Stork stork;
 };
 
@@ -444,7 +444,7 @@ bool CanFrogJump(const int newX, const int newY, const Board* b)
 	{
 		return false;
 	}
-	if (newY > b->roadsSize - 1)
+	if (newY > b->roadsNumber - 1)
 	{
 		return false;
 	}
@@ -453,7 +453,7 @@ bool CanFrogJump(const int newX, const int newY, const Board* b)
 		return false;
 	}
 
-	for (int i = 0; i < b->buildingsSize; ++i)
+	for (int i = 0; i < b->buildingsNumber; ++i)
 	{
 		if (newX == b->buildings[i].x && newY == b->buildings[i].roadNumber)
 		{
@@ -591,7 +591,7 @@ void FrogGetInTaxi(Board* b, Car& c)
 void ChangeCarRoad(const Board* b, Car& c)
 {
 	int numberOfStreets = 0;
-	for (int i = 0; i < b->roadsSize; ++i)
+	for (int i = 0; i < b->roadsNumber; ++i)
 	{
 		if (b->roads[i].type == Street)
 		{
@@ -600,7 +600,7 @@ void ChangeCarRoad(const Board* b, Car& c)
 	}
 	int* streets = new int[numberOfStreets];
 	int index = 0;
-	for (int i = 0; i < b->roadsSize; ++i)
+	for (int i = 0; i < b->roadsNumber; ++i)
 	{
 		if (b->roads[i].type == Street)
 		{
@@ -618,7 +618,7 @@ void ChangeCarRoad(const Board* b, Car& c)
 
 GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 {
-	for (int i = 0; i < b->carsSize; ++i)
+	for (int i = 0; i < b->carsNumber; ++i)
 	{
 		Car& c = b->cars[i];
 		switch (b->roads[b->cars[i].roadNumber].direction)
@@ -883,7 +883,7 @@ void GameDraw(const GameState& self, WINDOW*win)
 	printw("Time: %ds    Score: %d\n", board->time/1000, board->score);
 
 	// roads
-	for (int i = 0; i < board->roadsSize; ++i)
+	for (int i = 0; i < board->roadsNumber; ++i)
 	{
 		switch (board->roads[i].type) {
 			case Grass:
@@ -903,7 +903,7 @@ void GameDraw(const GameState& self, WINDOW*win)
 	printw("Pawel Leczkowski 203700");
 
 	// cars
-	for (int i = 0; i < board->carsSize; ++i)
+	for (int i = 0; i < board->carsNumber; ++i)
 	{
 		DrawCar(board, i, upperStatusAreaSize);
 	}
@@ -912,7 +912,7 @@ void GameDraw(const GameState& self, WINDOW*win)
 	DrawFrog(board, upperStatusAreaSize);
 
 	// buildings/obstacles
-	DrawBuildings(upperStatusAreaSize, board->buildings, board->buildingsSize);
+	DrawBuildings(upperStatusAreaSize, board->buildings, board->buildingsNumber);
 
 	// stork
 	DrawStork(board, upperStatusAreaSize);
@@ -931,16 +931,16 @@ void GameDone(GameState& self, const Options* options, void* initData)
 
 void InitRoads(Board* board, const Options* options)
 {
-	board->roadsSize = options->road.roadSize;
-	board->roads = new Road[board->roadsSize];
+	board->roadsNumber = options->road.roadNumber;
+	board->roads = new Road[board->roadsNumber];
 
 	board->roads[0].type = Grass;
-	for (int i = 1; i < board->roadsSize - 1; ++i)
+	for (int i = 1; i < board->roadsNumber - 1; ++i)
 	{
 		board->roads[i].direction = Direction(rand() % 2);
 		board->roads[i].type = RoadType(rand() % 2);
 	}
-	board->roads[board->roadsSize - 1].type = Grass;
+	board->roads[board->roadsNumber - 1].type = Grass;
 
 
 	/*
@@ -957,12 +957,12 @@ void InitRoads(Board* board, const Options* options)
 	board->roads[8].type = Grass;
 	board->roads[9].type = Grass;
 
-	for (int i = 0; i < board->roadsSize / 2; ++i)
+	for (int i = 0; i < board->roadsNumber / 2; ++i)
 	{
 		board->roads[i].direction = Right;
 	}
 
-	for (int i = board->roadsSize / 2; i < board->roadsSize; ++i)
+	for (int i = board->roadsNumber / 2; i < board->roadsNumber; ++i)
 	{
 		board->roads[i].direction = Left;
 	}*/
@@ -971,16 +971,16 @@ void InitRoads(Board* board, const Options* options)
 void InitFrog(Board* board)
 {
 	int x = rand() % board->width / 2;
-	board->frog = { x, board->roadsSize - 1, 0, NULL, false };
+	board->frog = { x, board->roadsNumber - 1, 0, NULL, false };
 }
 
 void InitCars(Board* board, const Options* options)
 {
-	board->carsSize = options->car.carsSize;
-	board->cars = new Car[board->carsSize];
+	board->carsNumber = options->car.carsNumber;
+	board->cars = new Car[board->carsNumber];
 
 	int numberOfStreets = 0;
-	for (int i = 0; i < board->roadsSize; ++i)
+	for (int i = 0; i < board->roadsNumber; ++i)
 	{
 		if (board->roads[i].type == Street)
 		{
@@ -989,7 +989,7 @@ void InitCars(Board* board, const Options* options)
 	}
 	int* streets = new int[numberOfStreets];
 	int index = 0;
-	for (int i = 0; i < board->roadsSize; ++i)
+	for (int i = 0; i < board->roadsNumber; ++i)
 	{
 		if (board->roads[i].type == Street)
 		{
@@ -998,7 +998,7 @@ void InitCars(Board* board, const Options* options)
 		}
 	}
 
-	for (int i = 0; i < board->carsSize; ++i)
+	for (int i = 0; i < board->carsNumber; ++i)
 	{
 		board->cars[i].size = rand() % 3 + 1;
 		board->cars[i].speed = rand() % (10 + 1 - 2) + 2;
@@ -1023,11 +1023,11 @@ void InitBuildings(Board* board, const Options* options)
 {
 	// TODO: random
 
-	board->buildingsSize = options->building.buildingsSize;
-	board->buildings = new Building[board->buildingsSize];
+	board->buildingsNumber = options->building.buildingsNumber;
+	board->buildings = new Building[board->buildingsNumber];
 
 	int numberOfGrass = 0;
-	for (int i = 0; i < board->roadsSize; ++i)
+	for (int i = 0; i < board->roadsNumber; ++i)
 	{
 		if (board->roads[i].type == Grass)
 		{
@@ -1036,7 +1036,7 @@ void InitBuildings(Board* board, const Options* options)
 	}
 	int* grass = new int[numberOfGrass];
 	int index = 0;
-	for (int i = 0; i < board->roadsSize; ++i)
+	for (int i = 0; i < board->roadsNumber; ++i)
 	{
 		if (board->roads[i].type == Grass)
 		{
@@ -1045,7 +1045,7 @@ void InitBuildings(Board* board, const Options* options)
 		}
 	}
 
-	for (int i = 0; i < board->buildingsSize; ++i)
+	for (int i = 0; i < board->buildingsNumber; ++i)
 	{
 		board->buildings[i].x = rand() % board->width;
 		board->buildings[i].roadNumber = grass[rand() % numberOfGrass];
@@ -1094,7 +1094,7 @@ void GameInit(GameState& self, const Options* options, void* initData)
 	InitStork(board, options);
 
 	int cols = board->width + 1;
-	int lines = board->roadsSize + 2;
+	int lines = board->roadsNumber + 2;
 
 	Resize(cols, lines);
 
@@ -1410,7 +1410,7 @@ void GameOverInit(GameState& self, const Options* options, void* initData)
 
 		for (int i = 0; i < 5; ++i)
 		{
-			int a = fscanf(file, "%s\n", data->players[i].name);
+			int a = fscanf (file, "%s\n", data->players[i].name);
 			if (strcmp(data->players[i].name, "(null)") == 0 || a != 1)
 			{
 				strcpy(data->players[i].name, "---\0");
@@ -1495,11 +1495,11 @@ Options* CreateOptions()
 	options->car.returnChances = 10;
 	options->car.wrapChances = 50;
 	options->car.breakDistance = 2;
-	options->car.carsSize = 10;
+	options->car.carsNumber = 10;
 
-	options->road.roadSize = 10;
+	options->road.roadNumber = 10;
 
-	options->building.buildingsSize = 10;
+	options->building.buildingsNumber = 10;
 
 	options->stork.startX = 0;
 	options->stork.startY = 0;
@@ -1515,9 +1515,155 @@ Options* CreateOptions()
 	return options;
 }
 
+bool StartsWith(const char* str, const char* begin)
+{
+	size_t lenS = strlen(str);
+	size_t lenBegin = strlen(begin);
+	size_t maxLen = lenS < lenBegin ? lenS : lenBegin;
+	for (size_t i = 0; i < maxLen; i++)
+	{
+		if (str[i] != begin[i])
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+int GetInt(char* str)
+{
+	char* pos = strchr(str, '=');
+	if (pos == NULL)
+	{
+		return 0;
+	}
+
+	int result = atoi(pos + 1);
+	return result;
+}
+
+char* GetString(char* str)
+{
+	char* pos = strchr(str, '=');
+	if (pos == NULL)
+	{
+		return NULL;
+	}
+
+	size_t len = strlen(pos);
+	if (pos[len-1] == '\n')
+	{
+		pos[len - 1] = '\0';
+	}
+
+	return pos + 1;
+}
+
+Options* ReadOptions(Options* options)
+{
+	FILE* file = fopen("frog.config", "r");
+	if (file != NULL)
+	{
+		const int bufferSize = 1024;
+		char buffer[bufferSize];
+		while (fgets(buffer, bufferSize - 1, file))
+		{
+			if (StartsWith(buffer, "general.startScreenWidth"))
+			{
+				options->general.startScreenWidth = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "general.startScreenHeight"))
+			{
+				options->general.startScreenHeight = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "general.maxTime"))
+			{
+				options->general.maxTime = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "car.speedUpFactor"))
+			{
+				options->car.speedUpFactor = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "car.speedUpChances"))
+			{
+				options->car.speedUpChances = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "car.slowDownChances"))
+			{
+				options->car.slowDownChances = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "car.returnChances"))
+			{
+				options->car.returnChances = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "car.wrapChances"))
+			{
+				options->car.wrapChances = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "car.breakDistance"))
+			{
+				options->car.breakDistance = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "car.carsNumber"))
+			{
+				options->car.carsNumber = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "road.roadNumber"))
+			{
+				options->road.roadNumber = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "building.buildingsNumber"))
+			{
+				options->building.buildingsNumber = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "stork.startX"))
+			{
+				options->stork.startX = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "stork.startY"))
+			{
+				options->stork.startY = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "stork.speed"))
+			{
+				options->stork.speed = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "board.width"))
+			{
+				options->board.width = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "useSeed"))
+			{
+				char* str = GetString(buffer);
+				if (strcmp(str, "true") == 0)
+				{
+					options->useSeed = true;
+				}
+				else
+				{
+					options->useSeed = false;
+				}
+			}
+			else if (StartsWith(buffer, "seed"))
+			{
+				options->seed = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "files.bestScoresFileName"))
+			{
+				options->files.bestScoresFileName = GetString(buffer);
+			}
+		}
+
+		fclose(file);
+	}
+
+	return options;
+}
+
 int main()
 {
-	Options* options = CreateOptions();
+	Options* options = ReadOptions(CreateOptions());
 
 	if (options->useSeed)
 	{
@@ -1569,5 +1715,4 @@ int main()
 	}
 }
 
-// dodac referencje
 // przy delete zrzutowac wskaznik przed delete
