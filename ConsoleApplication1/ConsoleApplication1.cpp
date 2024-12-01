@@ -162,6 +162,9 @@ struct Options
 	BuildingOptions building;
 	ColorsOptions colors;
 	GeneralOptions general;
+
+	bool useSeed;
+	int seed;
 };
 
 
@@ -1425,16 +1428,26 @@ Options* CreateOptions()
 
 	options->board.width = 80;
 
+	options->useSeed = false;
+	options->seed = 1;
 
 	return options;
 }
 
 int main()
 {
-	srand(time(NULL));  // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
-	WINDOW* win = InitWindow();
-
 	Options* options = CreateOptions();
+
+	if (options->useSeed)
+	{
+		srand(options->seed);
+	}
+	else
+	{
+		srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
+	}
+
+	WINDOW* win = InitWindow();
 
 	GameState Start = CreateStart(options);
 	GameState Game = CreateGame(options);
