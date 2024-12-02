@@ -115,7 +115,8 @@ struct CarOptions
 
 struct FrogOptions
 {
-	
+	char skinOne[2];
+	char skinTwo[2];
 };
 
 struct StorkOptions
@@ -172,7 +173,6 @@ struct Options
 	bool useSeed;
 	int seed;
 };
-
 
 // structs
 
@@ -307,6 +307,7 @@ WINDOW* InitWindow()
 	{
 		start_color();
 
+		// TODO: Nazwy sta³ych powinny odpowiadaæ przeznaczeniu, czyli do usuniêcia Green / Gray, itp
 		InitColor(GrassGreen, 65, 152, 10);
 		InitColor(FrogGreen, 153, 198, 142);
 		InitColor(RoadGray, 179, 179, 179);
@@ -314,6 +315,7 @@ WINDOW* InitWindow()
 		InitColor(FrogBlood, 120, 6, 6);
 		InitColor(Window, 0, 153, 255);
 
+		// TODO: Nazwy sta³ych powinny odpowiadaæ przeznaczeniu, czyli do usuniêcia Green / Gray / Red, itp
 		InitColorPair(GrassGreen_GrassGreen, GrassGreen, GrassGreen);
 		InitColorPair(FrogGreen_Black, FrogGreen, Black);
 		InitColorPair(RoadGray_RoadGray, RoadGray, RoadGray);
@@ -524,7 +526,7 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 			}
 			break;
 		}
-	default: break;
+		default: break;
 	}
 
 	if (jump && IsFrogInHome(board->frog, board->home))
@@ -590,6 +592,7 @@ void FrogGetInTaxi(Board* b, Car& c)
 
 void ChangeCarRoad(const Board* b, Car& c)
 {
+	// TODO: wyci¹c bo to jest podobny fragment
 	int numberOfStreets = 0;
 	for (int i = 0; i < b->roadsNumber; ++i)
 	{
@@ -795,6 +798,7 @@ void DrawBuildings(int upperStatusAreaSize, const Building* buildings, int build
 		Building b = buildings[i];
 		move(b.roadNumber + upperStatusAreaSize, b.x);
 		StartPair(Brick_Black);
+		// TODO: znak do parametrów
 		printw("A");
 		EndPair(Brick_Black);
 	}
@@ -802,6 +806,7 @@ void DrawBuildings(int upperStatusAreaSize, const Building* buildings, int build
 
 void DrawCar(const Board* board, int i, int UpperStatusAreaSize)
 {
+	// TODO: znaki do parametrów
 	const char carsChars[4][4] = { "", "H", "HH", "HHH" };
 	Car& c = board->cars[i];
 
@@ -841,17 +846,17 @@ void DrawCar(const Board* board, int i, int UpperStatusAreaSize)
 	}
 }
 
-void DrawFrog(const Board* board, int UpperStatusAreaSize)
+void DrawFrog(const Board* board, Options* options, int UpperStatusAreaSize)
 {
 	move(board->frog.y + UpperStatusAreaSize, board->frog.x);
 	StartPair(FrogGreen_Black);
 	if (board->frog.skin == 0)
 	{
-		printw("F");
+		printw(options->frog.skinOne);
 	}
 	else
 	{
-		printw("f");
+		printw(options->frog.skinTwo);
 	}
 	EndPair(FrogGreen_Black);
 }
@@ -860,6 +865,7 @@ void DrawStork(const Board* board, int UpperStatusAreaSize)
 {
 	StartPair(Red_White);
 	move(board->stork.y + UpperStatusAreaSize, board->stork.x);
+	// TODO: znak do parametrów
 	printw("S");
 	EndPair(Red_White);
 }
@@ -868,6 +874,7 @@ void DrawHome(const Board* board, int UpperStatusAreaSize)
 {
 	move(board->home.y + UpperStatusAreaSize, board->home.x);
 	StartPair(Black_Brick);
+	// TODO: znak do parametrów
 	printw("H");
 	EndPair(Black_Brick);
 }
@@ -879,8 +886,9 @@ void GameDraw(const GameState& self, WINDOW*win)
 	Board* board = (Board*)self.data;
 
 	// upper status area containing inforamtion about time and score
+	// TODO: upperStatusAreaSize do parametrów
 	const int upperStatusAreaSize = 1; // TODO: rethink
-	printw("Time: %ds    Score: %d\n", board->time/1000, board->score);
+	printw("Time left: %ds    Score: %d\n", board->maxTime - board->time/1000, board->score);
 
 	// roads
 	for (int i = 0; i < board->roadsNumber; ++i)
@@ -909,7 +917,7 @@ void GameDraw(const GameState& self, WINDOW*win)
 	}
 
 	// frog
-	DrawFrog(board, upperStatusAreaSize);
+	DrawFrog(board, self.options, upperStatusAreaSize);
 
 	// buildings/obstacles
 	DrawBuildings(upperStatusAreaSize, board->buildings, board->buildingsNumber);
@@ -941,31 +949,6 @@ void InitRoads(Board* board, const Options* options)
 		board->roads[i].type = RoadType(rand() % 2);
 	}
 	board->roads[board->roadsNumber - 1].type = Grass;
-
-
-	/*
-
-
-	board->roads[0].type = Grass;
-	board->roads[1].type = Street;
-	board->roads[2].type = Street;
-	board->roads[3].type = Grass;
-	board->roads[4].type = Grass;
-	board->roads[5].type = Street;
-	board->roads[6].type = Street;
-	board->roads[7].type = Street;
-	board->roads[8].type = Grass;
-	board->roads[9].type = Grass;
-
-	for (int i = 0; i < board->roadsNumber / 2; ++i)
-	{
-		board->roads[i].direction = Right;
-	}
-
-	for (int i = board->roadsNumber / 2; i < board->roadsNumber; ++i)
-	{
-		board->roads[i].direction = Left;
-	}*/
 }
 
 void InitFrog(Board* board)
@@ -979,6 +962,7 @@ void InitCars(Board* board, const Options* options)
 	board->carsNumber = options->car.carsNumber;
 	board->cars = new Car[board->carsNumber];
 
+	// TODO: wyci¹æ bo podobne
 	int numberOfStreets = 0;
 	for (int i = 0; i < board->roadsNumber; ++i)
 	{
@@ -1001,6 +985,7 @@ void InitCars(Board* board, const Options* options)
 	for (int i = 0; i < board->carsNumber; ++i)
 	{
 		board->cars[i].size = rand() % 3 + 1;
+		// TODO: min i max speed do parametrów
 		board->cars[i].speed = rand() % (10 + 1 - 2) + 2;
 		board->cars[i].x = 0;
 		board->cars[i].roadNumber = streets[rand() % numberOfStreets];
@@ -1008,21 +993,11 @@ void InitCars(Board* board, const Options* options)
 		board->cars[i].type = CarType(rand() % 3);
 	}
 
-	/*
-	board->cars[0] = { 3, 4.0f, 0, 1, Normal, Friendly };
-	board->cars[1] = { 2, 2.5f, 0, 2, Normal, Bad };
-	board->cars[2] = { 1, 2.7f, 0, 5, Normal, Bad };
-	board->cars[3] = { 2, 5.5f, 0, 6, Normal, Taxi };
-	board->cars[4] = { 3, 8.0f, 0, 7, Normal, Friendly };
-	*/
-
 	delete[] streets;
 }
 
 void InitBuildings(Board* board, const Options* options)
 {
-	// TODO: random
-
 	board->buildingsNumber = options->building.buildingsNumber;
 	board->buildings = new Building[board->buildingsNumber];
 
@@ -1052,14 +1027,6 @@ void InitBuildings(Board* board, const Options* options)
 	}
 
 	delete[] grass;
-
-	/*
-	board->buildings[0] = { 5, 3 };
-	board->buildings[1] = { 1, 3 };
-	board->buildings[2] = { 5, 4 };
-	board->buildings[3] = { 4, 4 };
-	board->buildings[4] = { 5, 8 };
-	*/
 }
 
 void InitOtherVariables(Board* board, const Options* options)
@@ -1398,7 +1365,6 @@ void GameOverInit(GameState& self, const Options* options, void* initData)
 		// if file do not exist
 		for (int i = 0; i < 5; ++i)
 		{
-			//strcpy(data->players[i].name, "1234567890\0");
 			strcpy(data->players[i].name, "---\0");
 			data->players[i].score = 0;
 		}
@@ -1427,6 +1393,7 @@ void GameOverInit(GameState& self, const Options* options, void* initData)
 
 	InsertYou(data);
 
+	// TODO: do parametrów
 	Resize(56, 45);
 }
 
@@ -1488,6 +1455,11 @@ Options* CreateOptions()
 	options->general.startScreenWidth = 53;
 	options->general.startScreenHeight = 23;
 	options->general.maxTime = 100;
+
+	options->frog.skinOne[0] = 'F';
+	options->frog.skinOne[1] = '\0';
+	options->frog.skinTwo[0] = 'f';
+	options->frog.skinTwo[1] = '\0';
 
 	options->car.speedUpFactor = 5.0f;
 	options->car.speedUpChances = 10;
@@ -1581,6 +1553,14 @@ Options* ReadOptions(Options* options)
 			{
 				options->general.maxTime = GetInt(buffer);
 			}
+			else if (StartsWith(buffer, "frog.skinOne"))
+			{
+				options->frog.skinOne[0] = GetString(buffer)[0];
+			}
+			else if (StartsWith(buffer, "frog.skinTwo"))
+			{
+				options->frog.skinTwo[0] = GetString(buffer)[0];
+			}
 			else if (StartsWith(buffer, "car.speedUpFactor"))
 			{
 				options->car.speedUpFactor = GetInt(buffer);
@@ -1635,15 +1615,7 @@ Options* ReadOptions(Options* options)
 			}
 			else if (StartsWith(buffer, "useSeed"))
 			{
-				char* str = GetString(buffer);
-				if (strcmp(str, "true") == 0)
-				{
-					options->useSeed = true;
-				}
-				else
-				{
-					options->useSeed = false;
-				}
+				options->useSeed = GetString(buffer)[0] == 'y';
 			}
 			else if (StartsWith(buffer, "seed"))
 			{
