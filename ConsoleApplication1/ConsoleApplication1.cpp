@@ -140,6 +140,7 @@ struct RoadOptions
 struct BuildingOptions
 {
 	int buildingsNumber;
+	char skin[2];
 };
 
 struct ColorsOptions
@@ -187,7 +188,7 @@ struct GameState
 	void (*init)(GameState&, const Options*, void*);
 	GameStateChange(*keysHandler)(const GameState&, int);
 	GameStateChange(*timerHandler)(const GameState&, const Options*, int);
-	void (*draw)(const GameState&, WINDOW*);
+	void (*draw)(const GameState&, const Options*, WINDOW*);
 	void (*done)(GameState&, const Options*, void*);
 
 	Options* options;
@@ -376,7 +377,7 @@ void DrawStartFrog()
 	printw("                )_/ /|\\   /|\\ \\_(                   \n");
 }
 
-void StartDraw(const GameState& self, WINDOW* win)
+void StartDraw(const GameState& self, const Options* options, WINDOW* win)
 {
 	clear();
 	StartPair(FrogGreen_Black);
@@ -791,15 +792,14 @@ void DrawGrass(int width)
 	EndPair(GrassGreen_GrassGreen);
 }
 
-void DrawBuildings(int upperStatusAreaSize, const Building* buildings, int buildingsSize)
+void DrawBuildings(int upperStatusAreaSize, const Building* buildings, const Options* options, int buildingsSize)
 {
 	for (int i = 0; i < buildingsSize; ++i)
 	{
 		Building b = buildings[i];
 		move(b.roadNumber + upperStatusAreaSize, b.x);
 		StartPair(Brick_Black);
-		// TODO: znak do parametrów
-		printw("A");
+		printw(options->building.skin);
 		EndPair(Brick_Black);
 	}
 }
@@ -879,7 +879,7 @@ void DrawHome(const Board* board, int UpperStatusAreaSize)
 	EndPair(Black_Brick);
 }
 
-void GameDraw(const GameState& self, WINDOW*win)
+void GameDraw(const GameState& self, const Options* options, WINDOW*win)
 {
 	clear();
 
@@ -887,7 +887,7 @@ void GameDraw(const GameState& self, WINDOW*win)
 
 	// upper status area containing inforamtion about time and score
 	// TODO: upperStatusAreaSize do parametrów
-	const int upperStatusAreaSize = 1; // TODO: rethink
+	const int upperStatusAreaSize = 1;
 	printw("Time left: %ds    Score: %d\n", board->maxTime - board->time/1000, board->score);
 
 	// roads
@@ -920,7 +920,7 @@ void GameDraw(const GameState& self, WINDOW*win)
 	DrawFrog(board, self.options, upperStatusAreaSize);
 
 	// buildings/obstacles
-	DrawBuildings(upperStatusAreaSize, board->buildings, board->buildingsNumber);
+	DrawBuildings(upperStatusAreaSize, board->buildings, options, board->buildingsNumber);
 
 	// stork
 	DrawStork(board, upperStatusAreaSize);
@@ -1269,7 +1269,7 @@ void DrawYouLost3(GameOverMessageData* data)
 	StartPair(FrogBlood_FrogBlood); printw("-------------------------"); EndPair(FrogBlood_FrogBlood); StartPair(RoadGray_RoadGray); printw("------------------------------\n\n"); EndPair(RoadGray_RoadGray);
 }
 
-void GameOverDraw(const GameState& self, WINDOW*win)
+void GameOverDraw(const GameState& self, const Options* options, WINDOW*win)
 {
 	GameOverMessageData* data = (GameOverMessageData*)self.data;
 
@@ -1445,7 +1445,7 @@ GameStateChange MainLoop(const GameState& current, const Options* options, WINDO
 			return change;
 		}
 
-		current.draw(current, win);
+		current.draw(current, options, win);
 	}
 }
 
@@ -1472,6 +1472,8 @@ Options* CreateOptions()
 	options->road.roadNumber = 10;
 
 	options->building.buildingsNumber = 10;
+	options->building.skin[0] = 'A';
+	options->building.skin[1] = '\0';
 
 	options->stork.startX = 0;
 	options->stork.startY = 0;
@@ -1624,6 +1626,10 @@ Options* ReadOptions(Options* options)
 			else if (StartsWith(buffer, "files.bestScoresFileName"))
 			{
 				options->files.bestScoresFileName = GetString(buffer);
+			}
+			else if (StartsWith(buffer, "building.skin"))
+			{
+				options->building.skin[0] = GetString(buffer)[0];
 			}
 		}
 
