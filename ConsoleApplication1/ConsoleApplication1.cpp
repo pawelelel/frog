@@ -119,6 +119,10 @@ struct CarOptions
 
 	int maxSpeed;
 	int minSpeed;
+
+	char bikeSkin[4];
+	char carSkin[4];
+	char truckSkin[4];
 };
 
 struct FrogOptions
@@ -826,10 +830,13 @@ void DrawBuildings(int upperStatusAreaSize, const Building* buildings, const Opt
 	}
 }
 
-void DrawCar(const Board* board, int i, int UpperStatusAreaSize)
+void DrawCar(const Board* board, const Options* options, int i, int UpperStatusAreaSize)
 {
-	// TODO: znaki do parametrów
-	const char carsChars[4][4] = { "", "H", "HH", "HHH" };
+	char carsChars[4][4];
+	strcpy(carsChars[0], "");
+	strcpy(carsChars[1], options->car.bikeSkin);
+	strcpy(carsChars[2], options->car.carSkin);
+	strcpy(carsChars[3], options->car.truckSkin);
 	Car& c = board->cars[i];
 
 	move(c.roadNumber + UpperStatusAreaSize, (int)round(c.x));
@@ -932,7 +939,7 @@ void GameDraw(const GameState& self, const Options* options, WINDOW*win)
 	// cars
 	for (int i = 0; i < board->carsNumber; ++i)
 	{
-		DrawCar(board, i, upperStatusAreaSize);
+		DrawCar(board, options, i, upperStatusAreaSize);
 	}
 
 	// frog
@@ -1462,6 +1469,18 @@ Options* CreateOptions()
 	options->car.minSpeed = 5;
 	options->car.maxSpeed = 15;
 
+	options->car.bikeSkin[0] = '#';
+	options->car.bikeSkin[1] = '\0';
+
+	options->car.carSkin[0] = '#';
+	options->car.carSkin[1] = '#';
+	options->car.carSkin[2] = '\0';
+
+	options->car.truckSkin[0] = '#';
+	options->car.truckSkin[1] = '#';
+	options->car.truckSkin[2] = '#';
+	options->car.truckSkin[3] = '\0';
+
 	options->road.roadNumber = 10;
 
 	options->building.buildingsNumber = 10;
@@ -1649,6 +1668,21 @@ Options* ReadOptions(Options* options)
 			else if (StartsWith(buffer, "car.maxSpeed"))
 			{
 				options->car.maxSpeed = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "car.bikeSkin"))
+			{
+				options->car.bikeSkin[0] = GetString(buffer)[0];
+			}
+			else if (StartsWith(buffer, "car.carSkin"))
+			{
+				options->car.carSkin[0] = GetString(buffer)[0];
+				options->car.carSkin[1] = GetString(buffer)[1];
+			}
+			else if (StartsWith(buffer, "car.truckSkin"))
+			{
+				options->car.truckSkin[0] = GetString(buffer)[0];
+				options->car.truckSkin[1] = GetString(buffer)[1];
+				options->car.truckSkin[2] = GetString(buffer)[2];
 			}
 		}
 
