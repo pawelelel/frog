@@ -602,27 +602,38 @@ void FrogGetInTaxi(Board* b, Car& c)
 	b->frog.onCar = true;
 }
 
-void ChangeCarRoad(const Board* b, Car& c)
+int GetNumberOfStreets(const Board* b, RoadType road)
 {
-	// TODO: wyci¹c bo to jest podobny fragment
 	int numberOfStreets = 0;
 	for (int i = 0; i < b->roadsNumber; ++i)
 	{
-		if (b->roads[i].type == Street)
+		if (b->roads[i].type == road)
 		{
 			numberOfStreets++;
 		}
 	}
+	return numberOfStreets;
+}
+
+int* GetIndexesOfStreets(const Board* b, int numberOfStreets, RoadType road)
+{
 	int* streets = new int[numberOfStreets];
 	int index = 0;
 	for (int i = 0; i < b->roadsNumber; ++i)
 	{
-		if (b->roads[i].type == Street)
+		if (b->roads[i].type == road)
 		{
 			streets[index] = i;
 			index++;
 		}
 	}
+	return streets;
+}
+
+void ChangeCarRoad(const Board* b, Car& c)
+{
+	int numberOfStreets = GetNumberOfStreets(b, Street);
+	int* streets = GetIndexesOfStreets(b, numberOfStreets, Street);
 
 	c.x = 1.0f - c.size;
 	int newRoad = rand() % numberOfStreets;
@@ -895,7 +906,6 @@ void GameDraw(const GameState& self, const Options* options, WINDOW*win)
 	Board* board = (Board*)self.data;
 
 	// upper status area containing inforamtion about time and score
-	// TODO: upperStatusAreaSize do parametrów
 	const int upperStatusAreaSize = 1;
 	printw("Time left: %ds    Score: %d\n", board->maxTime - board->time/1000, board->score);
 
@@ -971,25 +981,8 @@ void InitCars(Board* board, const Options* options)
 	board->carsNumber = options->car.carsNumber;
 	board->cars = new Car[board->carsNumber];
 
-	// TODO: wyci¹æ bo podobne
-	int numberOfStreets = 0;
-	for (int i = 0; i < board->roadsNumber; ++i)
-	{
-		if (board->roads[i].type == Street)
-		{
-			numberOfStreets++;
-		}
-	}
-	int* streets = new int[numberOfStreets];
-	int index = 0;
-	for (int i = 0; i < board->roadsNumber; ++i)
-	{
-		if (board->roads[i].type == Street)
-		{
-			streets[index] = i;
-			index++;
-		}
-	}
+	int numberOfStreets = GetNumberOfStreets(board, Street);
+	int* streets = GetIndexesOfStreets(board, numberOfStreets, Street);
 
 	for (int i = 0; i < board->carsNumber; ++i)
 	{
@@ -1011,24 +1004,8 @@ void InitBuildings(Board* board, const Options* options)
 	board->buildingsNumber = options->building.buildingsNumber;
 	board->buildings = new Building[board->buildingsNumber];
 
-	int numberOfGrass = 0;
-	for (int i = 0; i < board->roadsNumber; ++i)
-	{
-		if (board->roads[i].type == Grass)
-		{
-			numberOfGrass++;
-		}
-	}
-	int* grass = new int[numberOfGrass];
-	int index = 0;
-	for (int i = 0; i < board->roadsNumber; ++i)
-	{
-		if (board->roads[i].type == Grass)
-		{
-			grass[index] = i;
-			index++;
-		}
-	}
+	int numberOfGrass = GetNumberOfStreets(board, Grass);
+	int* grass = GetIndexesOfStreets(board, numberOfGrass, Grass);
 
 	for (int i = 0; i < board->buildingsNumber; ++i)
 	{
