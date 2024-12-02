@@ -123,6 +123,7 @@ struct StorkOptions
 {
 	int startX, startY;
 	float speed;
+	char skin[2];
 };
 
 struct BoardOptions
@@ -861,12 +862,11 @@ void DrawFrog(const Board* board, Options* options, int UpperStatusAreaSize)
 	EndPair(FrogGreen_Black);
 }
 
-void DrawStork(const Board* board, int UpperStatusAreaSize)
+void DrawStork(const Board* board, const Options* options, int UpperStatusAreaSize)
 {
 	StartPair(Red_White);
 	move(board->stork.y + UpperStatusAreaSize, board->stork.x);
-	// TODO: znak do parametrów
-	printw("S");
+	printw(options->stork.skin);
 	EndPair(Red_White);
 }
 
@@ -923,7 +923,7 @@ void GameDraw(const GameState& self, const Options* options, WINDOW*win)
 	DrawBuildings(upperStatusAreaSize, board->buildings, options, board->buildingsNumber);
 
 	// stork
-	DrawStork(board, upperStatusAreaSize);
+	DrawStork(board, options, upperStatusAreaSize);
 
 	// home
 	DrawHome(board, upperStatusAreaSize);
@@ -1478,6 +1478,8 @@ Options* CreateOptions()
 	options->stork.startX = 0;
 	options->stork.startY = 0;
 	options->stork.speed = 1.0f;
+	options->stork.skin[0] = 'S';
+	options->stork.skin[1] = '\0';
 
 	options->board.width = 80;
 
@@ -1630,6 +1632,10 @@ Options* ReadOptions(Options* options)
 			else if (StartsWith(buffer, "building.skin"))
 			{
 				options->building.skin[0] = GetString(buffer)[0];
+			}
+			else if (StartsWith(buffer, "stork.skin"))
+			{
+				options->stork.skin[0] = GetString(buffer)[0];
 			}
 		}
 
