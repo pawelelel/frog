@@ -100,6 +100,11 @@ enum CarType
 
 // options
 
+struct HomeOptions
+{
+	char skin[2];
+};
+
 struct CarOptions
 {
 	int speedUpFactor;
@@ -162,6 +167,7 @@ struct FilesOptions
 
 struct Options
 {
+	HomeOptions home;
 	CarOptions car;
 	FrogOptions frog;
 	StorkOptions stork;
@@ -870,12 +876,11 @@ void DrawStork(const Board* board, const Options* options, int UpperStatusAreaSi
 	EndPair(Red_White);
 }
 
-void DrawHome(const Board* board, int UpperStatusAreaSize)
+void DrawHome(const Board* board, const Options* options, int UpperStatusAreaSize)
 {
 	move(board->home.y + UpperStatusAreaSize, board->home.x);
 	StartPair(Black_Brick);
-	// TODO: znak do parametrów
-	printw("H");
+	printw(options->home.skin);
 	EndPair(Black_Brick);
 }
 
@@ -926,7 +931,7 @@ void GameDraw(const GameState& self, const Options* options, WINDOW*win)
 	DrawStork(board, options, upperStatusAreaSize);
 
 	// home
-	DrawHome(board, upperStatusAreaSize);
+	DrawHome(board, options, upperStatusAreaSize);
 
 	wrefresh(win);
 }
@@ -1461,6 +1466,9 @@ Options* CreateOptions()
 	options->frog.skinTwo[0] = 'f';
 	options->frog.skinTwo[1] = '\0';
 
+	options->home.skin[0] = 'H';
+	options->home.skin[1] = '\0';
+
 	options->car.speedUpFactor = 5.0f;
 	options->car.speedUpChances = 10;
 	options->car.slowDownChances = 10;
@@ -1636,6 +1644,10 @@ Options* ReadOptions(Options* options)
 			else if (StartsWith(buffer, "stork.skin"))
 			{
 				options->stork.skin[0] = GetString(buffer)[0];
+			}
+			else if (StartsWith(buffer, "home.skin"))
+			{
+				options->home.skin[0] = GetString(buffer)[0];
 			}
 		}
 
