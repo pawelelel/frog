@@ -48,9 +48,9 @@ enum Colors
 	Magenta = COLOR_MAGENTA,
 	Yellow = COLOR_YELLOW,
 	White = COLOR_WHITE,
-	GrassGreen = 8,
-	FrogGreen = 9,
-	RoadGray = 10,
+	GrassColor = 8,
+	FrogColor = 9,
+	RoadColor = 10,
 	Brick = 11,
 	FrogBlood = 12,
 	Window = 13
@@ -323,25 +323,24 @@ WINDOW* InitWindow()
 	{
 		start_color();
 
-		// TODO: Nazwy sta³ych powinny odpowiadaæ przeznaczeniu, czyli do usuniêcia Green / Gray, itp
-		InitColor(GrassGreen, 65, 152, 10);
-		InitColor(FrogGreen, 153, 198, 142);
-		InitColor(RoadGray, 179, 179, 179);
+		InitColor(GrassColor, 65, 152, 10);
+		InitColor(FrogColor, 153, 198, 142);
+		InitColor(RoadColor, 179, 179, 179);
 		InitColor(Brick, 192, 50, 72);
 		InitColor(FrogBlood, 120, 6, 6);
 		InitColor(Window, 0, 153, 255);
 
 		// TODO: Nazwy sta³ych powinny odpowiadaæ przeznaczeniu, czyli do usuniêcia Green / Gray / Red, itp
-		InitColorPair(GrassGreen_GrassGreen, GrassGreen, GrassGreen);
-		InitColorPair(FrogGreen_Black, FrogGreen, Black);
-		InitColorPair(RoadGray_RoadGray, RoadGray, RoadGray);
+		InitColorPair(GrassGreen_GrassGreen, GrassColor, GrassColor);
+		InitColorPair(FrogGreen_Black, FrogColor, Black);
+		InitColorPair(RoadGray_RoadGray, RoadColor, RoadColor);
 		InitColorPair(Black_Brick, Black, Brick);
 		InitColorPair(Yellow_Black, Yellow, Black);
 		InitColorPair(FrogBlood_Black, FrogBlood, Black);
 		InitColorPair(FrogBlood_FrogBlood, FrogBlood, FrogBlood);
 		InitColorPair(Window_Black, Window, Black);
 		InitColorPair(Brick_Black, Brick, Black);
-		InitColorPair(GrassGreen_Black, GrassGreen, Black);
+		InitColorPair(GrassGreen_Black, GrassColor, Black);
 		InitColorPair(Red_Black, Red, Black);
 		InitColorPair(Green_Black, Green, Black);
 		InitColorPair(Red_White, Red, White);
