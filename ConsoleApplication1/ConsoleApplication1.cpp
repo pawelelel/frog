@@ -160,6 +160,7 @@ struct ColorsOptions
 struct GeneralOptions
 {
 	int startScreenWidth, startScreenHeight;
+	int gameOverScreenWidth, gameOverScreenHeight;
 	int maxTime;
 };
 
@@ -1402,8 +1403,7 @@ void GameOverInit(GameState& self, const Options* options, void* initData)
 
 	InsertYou(data);
 
-	// TODO: do parametrów
-	Resize(56, 45);
+	Resize(options->general.gameOverScreenWidth, options->general.gameOverScreenHeight);
 }
 
 GameState CreateGameOver(Options* options)
@@ -1463,6 +1463,8 @@ Options* CreateOptions()
 	Options* options = new Options;
 	options->general.startScreenWidth = 53;
 	options->general.startScreenHeight = 23;
+	options->general.gameOverScreenWidth = 56;
+	options->general.gameOverScreenHeight = 45;
 	options->general.maxTime = 100;
 
 	options->frog.skinOne[0] = 'F';
@@ -1566,6 +1568,14 @@ Options* ReadOptions(Options* options)
 			else if (StartsWith(buffer, "general.startScreenHeight"))
 			{
 				options->general.startScreenHeight = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "general.gameOverScreenWidth"))
+			{
+				options->general.gameOverScreenWidth = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "general.gameOverScreenHeight"))
+			{
+				options->general.gameOverScreenHeight = GetInt(buffer);
 			}
 			else if (StartsWith(buffer, "general.maxTime"))
 			{
