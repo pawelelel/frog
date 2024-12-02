@@ -116,6 +116,9 @@ struct CarOptions
 	int breakDistance;
 
 	int carsNumber;
+
+	int maxSpeed;
+	int minSpeed;
 };
 
 struct FrogOptions
@@ -990,8 +993,9 @@ void InitCars(Board* board, const Options* options)
 	for (int i = 0; i < board->carsNumber; ++i)
 	{
 		board->cars[i].size = rand() % 3 + 1;
-		// TODO: min i max speed do parametrów
-		board->cars[i].speed = rand() % (10 + 1 - 2) + 2;
+		int max = options->car.maxSpeed;
+		int min = options->car.minSpeed;
+		board->cars[i].speed = rand() % (max + 1 - min) + min;
 		board->cars[i].x = 0;
 		board->cars[i].roadNumber = streets[rand() % numberOfStreets];
 		board->cars[i].speedType = Normal;
@@ -1476,6 +1480,8 @@ Options* CreateOptions()
 	options->car.wrapChances = 50;
 	options->car.breakDistance = 2;
 	options->car.carsNumber = 10;
+	options->car.minSpeed = 5;
+	options->car.maxSpeed = 15;
 
 	options->road.roadNumber = 10;
 
@@ -1648,6 +1654,14 @@ Options* ReadOptions(Options* options)
 			else if (StartsWith(buffer, "home.skin"))
 			{
 				options->home.skin[0] = GetString(buffer)[0];
+			}
+			else if (StartsWith(buffer, "car.minSpeed"))
+			{
+				options->car.minSpeed = GetInt(buffer);
+			}
+			else if (StartsWith(buffer, "car.maxSpeed"))
+			{
+				options->car.maxSpeed = GetInt(buffer);
 			}
 		}
 
