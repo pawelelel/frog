@@ -23,52 +23,21 @@
 
 enum ColorPairs
 {
-	GrassPair = 1,
-	FrogPair = 2,
-	RoadPair = 3,
-	HomePair = 4,
-	TaxiFontPair = 5,
-	FrogBloodFontPair = 6,
-	BloodPair = 7,
-	WindowPair = 8,
-	BrickPair = 9,
-	GrassFontPair = 10,
-	BadCarPair = 11,
-	FriendlyCarPair = 12,
-	StorkPair = 13,
-	CarLightsPair = 14,
-	BuildingPair = 15,
-};
-
-enum Colors
-{
-	// TODO: nie powinnismy uzywac predefiniwoanych kolorow jak WHITE czy YELLOW
-	GrassFontColor = 1,
-	GrassBackColor = 2,
-	FrogFontColor = 3,
-	FrogBackColor = 4,
-	RoadFontColor = 5,
-	RoadBackColor = 6,
-	BrickColor = 7,
-	FrogBloodFontColor = 8,
-	FrogBloodBackColor = 9,
-	HomeFontColor = 10,
-	HomeBackColor = 11,
-	WindowFontColor = 12,
-	WindowBackColor = 13,
-	TaxiFontColor = 14,
-	TaxiBackColor = 15,
-	BackgroundColor = 16,
-	BadCarFontColor = 17,
-	BadCarBackColor = 18,
-	FriendlyCarFontColor = 19,
-	FriendlyCarBackColor = 20,
-	StorkFontColor = 21,
-	StorkBackColor = 22,
-	CarLightFontColor = 23,
-	CarLightBackColor = 24,
-	BuildingFontColor = 25,
-	BuildingBackColor = 26,
+	GrassPair = 12,
+	FrogPair = 14,
+	RoadPair = 16,
+	HomePair = 18,
+	TaxiPair = 20,
+	FrogBloodFontPair = 22,
+	BloodPair = 24,
+	WindowPair = 26,
+	BrickPair = 28,
+	GrassHomePair = 30,
+	BadCarPair = 32,
+	FriendlyCarPair = 34,
+	StorkPair = 36,
+	CarLightsPair = 38,
+	BuildingPair = 40
 };
 
 enum State
@@ -178,20 +147,20 @@ struct RGB
 
 struct ColorsOptions
 {
-	// TODO: tu dodac parametry dla kolorow
-	RGB Background;
 	RGB GrassFont, GrassBack;
 	RGB FrogFont, FrogBack;
 	RGB RoadFont, RoadBack;
 	RGB HomeFont, HomeBack;
 	RGB TaxiFont, TaxiBack;
-	RGB FrogBloodFont, FrogBloodBack;
+	RGB FrogBloodFontFont, FrogBloodFontBack;
+	RGB BloodFont, BloodBack;
 	RGB WindowFont, WindowBack;
 	RGB BrickFont, BrickBack;
+	RGB GrassHomeFont, GrassHomeBack;
 	RGB BadCarFont, BadCarBack;
 	RGB FriendlyCarFont, FriendlyCarBack;
 	RGB StorkFont, StorkBack;
-	RGB LightFont, LightBack;
+	RGB CarLightFont, CarLightBack;
 	RGB BuildingFont, BuildingBack;
 };
 
@@ -357,62 +326,65 @@ WINDOW* InitWindow(const ColorsOptions& colors)
 	{
 		start_color();
 
-		// TODO: tu pobierac kolory z parametrow
-		InitColor(BackgroundColor, colors.Background.r, colors.Background.g, colors.Background.b);
-		InitColor(BrickColor, colors.BrickFont.r, colors.BrickFont.g, colors.BrickFont.b);
+		InitColor(GrassPair, colors.GrassFont.r, colors.GrassFont.g, colors.GrassFont.b);
+		InitColor(GrassPair + 1, colors.GrassBack.r, colors.GrassBack.g, colors.GrassBack.b);
+		InitColorPair(GrassPair, GrassPair, GrassPair + 1);
 
-		InitColor(CarLightFontColor, colors.LightFont.r, colors.LightFont.g, colors.LightFont.b);
-		InitColor(CarLightBackColor, colors.LightBack.r, colors.LightBack.g, colors.LightBack.b);
+		InitColor(FrogPair, colors.FrogFont.r, colors.FrogFont.g, colors.FrogFont.b);
+		InitColor(FrogPair + 1, colors.FrogBack.r, colors.FrogBack.g, colors.FrogBack.b);
+		InitColorPair(FrogPair, FrogPair, FrogPair + 1);
 
-		InitColor(GrassFontColor, colors.GrassFont.r, colors.GrassFont.g, colors.GrassFont.b);
-		InitColor(GrassBackColor, colors.GrassBack.r, colors.GrassBack.g, colors.GrassBack.b);
+		InitColor(RoadPair, colors.RoadFont.r, colors.RoadFont.g, colors.RoadFont.b);
+		InitColor(RoadPair + 1, colors.RoadBack.r, colors.RoadBack.g, colors.RoadBack.b);
+		InitColorPair(RoadPair, RoadPair, RoadPair + 1);
 
-		InitColor(FrogFontColor, colors.FrogFont.r, colors.FrogFont.g, colors.FrogFont.b);
-		InitColor(FrogBackColor, colors.FrogBack.r, colors.FrogBack.g, colors.FrogBack.b);
+		InitColor(HomePair, colors.HomeFont.r, colors.HomeFont.g, colors.HomeFont.b);
+		InitColor(HomePair + 1, colors.HomeBack.r, colors.HomeBack.g, colors.HomeBack.b);
+		InitColorPair(HomePair, HomePair, HomePair + 1);
 
-		InitColor(RoadFontColor, colors.RoadFont.r, colors.RoadFont.g, colors.RoadFont.b);
-		InitColor(RoadBackColor, colors.RoadBack.r, colors.RoadBack.g, colors.RoadBack.b);
+		InitColor(TaxiPair, colors.TaxiFont.r, colors.TaxiFont.g, colors.TaxiFont.b);
+		InitColor(TaxiPair + 1, colors.TaxiBack.r, colors.TaxiBack.g, colors.TaxiBack.b);
+		InitColorPair(TaxiPair, TaxiPair, TaxiPair + 1);
 
-		InitColor(HomeFontColor, colors.HomeFont.r, colors.HomeFont.g, colors.HomeFont.b);
-		InitColor(HomeBackColor, colors.HomeBack.r, colors.HomeBack.g, colors.HomeBack.b);
+		InitColor(FrogBloodFontPair, colors.FrogBloodFontFont.r, colors.FrogBloodFontFont.g, colors.FrogBloodFontFont.b);
+		InitColor(FrogBloodFontPair + 1, colors.FrogBloodFontBack.r, colors.FrogBloodFontBack.g, colors.FrogBloodFontBack.b);
+		InitColorPair(FrogBloodFontPair, FrogBloodFontPair, FrogBloodFontPair + 1);
 
-		InitColor(HomeFontColor, colors.FrogBloodFont.r, colors.FrogBloodFont.g, colors.FrogBloodFont.b);
-		InitColor(HomeBackColor, colors.FrogBloodBack.r, colors.FrogBloodBack.g, colors.FrogBloodBack.b);
+		InitColor(BloodPair, colors.BloodFont.r, colors.BloodFont.g, colors.BloodFont.b);
+		InitColor(BloodPair + 1, colors.BloodBack.r, colors.BloodBack.g, colors.BloodBack.b);
+		InitColorPair(BloodPair, BloodPair, BloodPair + 1);
 
-		InitColor(WindowFontColor, colors.WindowFont.r, colors.WindowFont.g, colors.WindowFont.b);
-		InitColor(WindowBackColor, colors.WindowBack.r, colors.WindowBack.g, colors.WindowBack.b);
+		InitColor(WindowPair, colors.WindowFont.r, colors.WindowFont.g, colors.WindowFont.b);
+		InitColor(WindowPair + 1, colors.WindowBack.r, colors.WindowBack.g, colors.WindowBack.b);
+		InitColorPair(WindowPair, WindowPair, WindowPair + 1);
 
-		InitColor(TaxiFontColor, colors.TaxiFont.r, colors.TaxiFont.g, colors.TaxiFont.b);
-		InitColor(TaxiBackColor, colors.TaxiBack.r, colors.TaxiBack.g, colors.TaxiBack.b);
+		InitColor(BrickPair, colors.BrickFont.r, colors.BrickFont.g, colors.BrickFont.b);
+		InitColor(BrickPair + 1, colors.BrickBack.r, colors.BrickBack.g, colors.BrickBack.b);
+		InitColorPair(BrickPair, BrickPair, BrickPair + 1);
 
-		InitColor(BadCarFontColor, colors.BadCarFont.r, colors.BadCarFont.g, colors.BadCarFont.b);
-		InitColor(BadCarBackColor, colors.BadCarBack.r, colors.BadCarBack.g, colors.BadCarBack.b);
+		InitColor(GrassHomePair, colors.GrassHomeFont.r, colors.GrassHomeFont.g, colors.GrassHomeFont.b);
+		InitColor(GrassHomePair + 1, colors.GrassHomeBack.r, colors.GrassHomeBack.g, colors.GrassHomeBack.b);
+		InitColorPair(GrassHomePair, GrassHomePair, GrassHomePair + 1);
 
-		InitColor(FriendlyCarFontColor, colors.FriendlyCarFont.r, colors.FriendlyCarFont.g, colors.FriendlyCarFont.b);
-		InitColor(FriendlyCarBackColor, colors.FriendlyCarBack.r, colors.FriendlyCarBack.g, colors.FriendlyCarBack.b);
+		InitColor(BadCarPair, colors.BadCarFont.r, colors.BadCarFont.g, colors.BadCarFont.b);
+		InitColor(BadCarPair + 1, colors.BadCarBack.r, colors.BadCarBack.g, colors.BadCarBack.b);
+		InitColorPair(BadCarPair, BadCarPair, BadCarPair + 1);
 
-		InitColor(StorkFontColor, colors.StorkFont.r, colors.StorkFont.g, colors.StorkFont.b);
-		InitColor(StorkBackColor, colors.StorkBack.r, colors.StorkBack.g, colors.StorkBack.b);
+		InitColor(FriendlyCarPair, colors.FriendlyCarFont.r, colors.FriendlyCarFont.g, colors.FriendlyCarFont.b);
+		InitColor(FriendlyCarPair + 1, colors.FriendlyCarBack.r, colors.FriendlyCarBack.g, colors.FriendlyCarBack.b);
+		InitColorPair(FriendlyCarPair, FriendlyCarPair, FriendlyCarPair + 1);
 
-		InitColor(BuildingFontColor, colors.BuildingFont.r, colors.BuildingFont.g, colors.BuildingFont.b);
-		InitColor(BuildingBackColor, colors.BuildingBack.r, colors.BuildingBack.g, colors.BuildingBack.b);
+		InitColor(StorkPair, colors.StorkFont.r, colors.StorkFont.g, colors.StorkFont.b);
+		InitColor(StorkPair + 1, colors.StorkBack.r, colors.StorkBack.g, colors.StorkBack.b);
+		InitColorPair(StorkPair, StorkPair, StorkPair + 1);
 
+		InitColor(CarLightsPair, colors.CarLightFont.r, colors.CarLightFont.g, colors.CarLightFont.b);
+		InitColor(CarLightsPair + 1, colors.CarLightBack.r, colors.CarLightBack.g, colors.CarLightBack.b);
+		InitColorPair(CarLightsPair, CarLightsPair, CarLightsPair + 1);
 
-		InitColorPair(GrassPair, GrassFontColor, GrassBackColor);
-		InitColorPair(FrogPair, FrogFontColor, FrogBackColor);
-		InitColorPair(RoadPair, RoadFontColor, RoadBackColor);
-		InitColorPair(HomePair, HomeFontColor, HomeBackColor);
-		InitColorPair(TaxiFontPair, TaxiFontColor, TaxiBackColor);
-		InitColorPair(FrogBloodFontPair, FrogBloodFontColor, BackgroundColor);
-		InitColorPair(BloodPair, FrogBloodFontColor, FrogBloodBackColor);
-		InitColorPair(WindowPair, WindowFontColor, WindowBackColor);
-		InitColorPair(FriendlyCarPair, FriendlyCarFontColor, FriendlyCarBackColor);
-		InitColorPair(BadCarPair, BadCarFontColor, BadCarBackColor);
-		InitColorPair(BrickPair, BrickColor, BackgroundColor);
-		InitColorPair(GrassFontPair, GrassFontColor, BackgroundColor);
-		InitColorPair(StorkPair, StorkFontColor, StorkBackColor);
-		InitColorPair(CarLightsPair, CarLightFontColor, CarLightBackColor);
-		InitColorPair(BuildingPair, BuildingFontColor, BuildingBackColor);
+		InitColor(BuildingPair, colors.BuildingFont.r, colors.BuildingFont.g, colors.BuildingFont.b);
+		InitColor(BuildingPair + 1, colors.BuildingBack.r, colors.BuildingBack.g, colors.BuildingBack.b);
+		InitColorPair(BuildingPair, BuildingPair, BuildingPair + 1);
 	}
 
 	return win;
@@ -702,6 +674,7 @@ int* GetIndexesOfStreets(const Board* b, int numberOfStreets, RoadType road)
 	return streets;
 }
 
+// TODO: losowanie ca³kowicie nowego autka
 void ChangeCarRoad(const Board* b, Car& c)
 {
 	int numberOfStreets = GetNumberOfStreets(b, Street);
@@ -935,9 +908,9 @@ void DrawCar(const Board* board, const Options* options, int i, int UpperStatusA
 		}
 		case Taxi:
 		{
-			StartPair(TaxiFontPair);
+			StartPair(TaxiPair);
 			printw(carsChars[c.size]);
-			EndPair(TaxiFontPair);
+			EndPair(TaxiPair);
 			break;
 		}
 	}
@@ -983,7 +956,7 @@ void GameDraw(const GameState& self, const Options* options, WINDOW*win)
 	// upper status area containing inforamtion about time and score
 	const int upperStatusAreaSize = 1;
 	printw("Time left: %ds    Score: %d\n", board->maxTime - board->time/1000, board->score);
-
+	
 	// roads
 	for (int i = 0; i < board->roadsNumber; ++i)
 	{
@@ -1284,7 +1257,7 @@ void DrawYouWon3(GameOverMessageData* data)
 		R"()   /\ \._./ /\   ()"); EndPair(FrogPair); StartPair(BrickPair); printw("    |\n"); EndPair(BrickPair);
 	StartPair(BrickPair); printw("       |  |      |        "); EndPair(BrickPair); StartPair(FrogPair); printw(
 		R"()_/ /|\   /|\ \_()"); EndPair(FrogPair); StartPair(BrickPair); printw("     |\n"); EndPair(BrickPair);
-	StartPair(GrassFontPair); DrawStr("~", 55); EndPair(GrassFontPair);
+	StartPair(GrassHomePair); DrawStr("~", 55); EndPair(GrassHomePair);
 	printw("                    Your score: %d\n", data->score);
 
 	EnterName(data);
@@ -1570,69 +1543,50 @@ Options* CreateOptions()
 	options->files.bestScoresFileName = new char[9];
 	strcpy(options->files.bestScoresFileName, "best.txt");
 
-	// TODO: tu dodac domyslne wartosci kolorow
-
-	// default colors
-
-	options->colors.Background = { 0, 0, 0 };
-	options->colors.BrickFont = { 0, 0, 0 };
-	options->colors.BrickBack = { 0, 0, 0 };
-
 	options->colors.GrassFont = { 65,152,10 };
-	options->colors.GrassBack = { 65,152,10 };
-
-	options->colors.FrogFont = { 0, 0, 0 };
-	options->colors.FrogBack = { 0,0,0 };
-
-	options->colors.RoadFont = { 0, 0, 0 };
-	options->colors.RoadBack = { 0, 0, 0 };
-
-	options->colors.FrogBloodFont = { 0, 0, 0 };
-	options->colors.FrogBloodBack = { 0, 0, 0 };
-
-	options->colors.HomeFont = { 10, 10, 10 };
-	options->colors.HomeBack = { 10, 10, 10 };
-	/*
-	options->colors.Background = { 0, 0, 0 };
-	options->colors.BrickFont = { 188, 74, 60};
-	options->colors.BrickBack = { 0, 0, 0};
-
-	options->colors.GrassFont = { 65,152,10 };
-	options->colors.GrassBack = { 65,152,10 };
+	options->colors.GrassBack = { 65, 152, 10 };
 
 	options->colors.FrogFont = { 153, 198, 142 };
-	options->colors.FrogBack = { 0,0,0 };
+	options->colors.FrogBack = { 0, 0, 0 };
 
 	options->colors.RoadFont = { 179, 179, 179 };
 	options->colors.RoadBack = { 179, 179, 179 };
 
-	options->colors.FrogBloodFont = { 120, 6, 6 };
-	options->colors.FrogBloodBack = { 120, 6, 6 };
-
 	options->colors.HomeFont = { 188, 74, 60 };
 	options->colors.HomeBack = { 65, 152, 10 };
-	*/
 
-	options->colors.TaxiFont = { 0, 0, 0 };
+	options->colors.TaxiFont = { 255, 255, 0 };
 	options->colors.TaxiBack = { 0, 0, 0 };
 
-	options->colors.WindowFont = { 0, 0, 0 };
+	options->colors.FrogBloodFontFont = { 120, 6, 6 };
+	options->colors.FrogBloodFontBack = { 0, 0, 0 };
+
+	options->colors.BloodFont = { 120, 6, 6 };
+	options->colors.BloodBack = { 120, 6, 6 };
+
+	options->colors.WindowFont = { 0, 0, 255 };
 	options->colors.WindowBack = { 0, 0, 0 };
 
-	options->colors.BadCarFont = { 0, 0, 0 };
+	options->colors.BrickFont = { 188, 74, 60 };
+	options->colors.BrickBack = { 0, 0, 0 };
+
+	options->colors.GrassHomeFont = { 65, 152, 10 };
+	options->colors.GrassHomeBack = { 0, 0, 0 };
+
+	options->colors.BadCarFont = { 255, 0, 0 };
 	options->colors.BadCarBack = { 0, 0, 0 };
 
-	options->colors.FriendlyCarFont = { 0, 0, 0 };
+	options->colors.FriendlyCarFont = { 0, 255, 0 };
 	options->colors.FriendlyCarBack = { 0, 0, 0 };
 
-	options->colors.StorkFont = { 0, 0, 0 };
-	options->colors.StorkBack = { 0, 0, 0 };
+	options->colors.StorkFont = { 255, 0, 0 };
+	options->colors.StorkBack = { 255, 255, 255 };
 
-	options->colors.LightFont = { 0, 0, 0 };
-	options->colors.LightBack = { 0, 0, 0 };
+	options->colors.CarLightFont = { 255, 255, 0 };
+	options->colors.CarLightBack = { 0, 0, 0 };
 
-	options->colors.BuildingFont = { 10, 10, 10 };
-	options->colors.BuildingBack = { 10, 10, 10 };
+	options->colors.BuildingFont = { 188, 74, 60 };
+	options->colors.BuildingBack = { 65, 152, 10 };
 
 	return options;
 }
@@ -1741,7 +1695,7 @@ Options* ReadOptions(Options* options)
 		char buffer[bufferSize];
 		while (fgets(buffer, bufferSize - 1, file))
 		{
-			// TODO: paramsy
+			// TODO: paramsy od skrócenia
 			ReadIntOption(buffer, "general.startScreenWidth", options->general.startScreenWidth);
 
 			if (StartsWith(buffer, "general.startScreenHeight"))
@@ -1888,6 +1842,14 @@ int main()
 
 	WINDOW* win = InitWindow(options->colors);
 
+	for (int i = 1; i < 16; i++)
+	{
+		StartPair(i);
+		printw("%d ---------              --------------\n", i);
+		EndPair(i);
+	}
+	wrefresh(win);
+	
 	GameState Start = CreateStart(options);
 	GameState Game = CreateGame(options);
 	GameState GameOver = CreateGameOver(options);
