@@ -1891,3 +1891,33 @@ int main()
 
 // przy delete zrzutowac wskaznik przed delete
 // wszystkie parametry umieœciæ w pliku
+// przerobic stork na liste
+
+/*
+levels ideas
+
+struct Level
+{
+	int levelNo;
+	int numberOfCars;
+	int numberOfStorks;
+	int boardHeight;
+	int numberOfRoads;
+	int minCarSpeed, maxCarSpeed;
+	int storkSpeed;
+};
+
+struct Game
+{
+	Level* levels;
+	int increaseOfCars; // +2
+	int maxCars; // 60
+	int increaseOfStorks; // +1
+	int maxStorks; // 10
+	int increaseOfBoardHeight; // +1
+	int maxBoardHeight; // 30
+	int increaseOfRoads; // +1
+	int increaseOfSpeed; // +10%
+};
+
+*/
