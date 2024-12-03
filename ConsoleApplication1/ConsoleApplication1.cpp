@@ -674,8 +674,7 @@ int* GetIndexesOfStreets(const Board* b, int numberOfStreets, RoadType road)
 	return streets;
 }
 
-// TODO: losowanie ca³kowicie nowego autka
-void ChangeCarRoad(const Board* b, Car& c)
+void ChangeCarRoad(const Board* b, Car& c, const Options* options)
 {
 	int numberOfStreets = GetNumberOfStreets(b, Street);
 	int* streets = GetIndexesOfStreets(b, numberOfStreets, Street);
@@ -683,6 +682,12 @@ void ChangeCarRoad(const Board* b, Car& c)
 	c.x = 1.0f - c.size;
 	int newRoad = rand() % numberOfStreets;
 	c.roadNumber = streets[newRoad];
+	c.size = rand() % 3 + 1;
+	int max = options->car.maxSpeed;
+	int min = options->car.minSpeed;
+	c.speed = rand() % (max + 1 - min) + min;
+	c.speedType = Normal;
+	c.type = CarType(rand() % 3);
 
 	delete[] streets;
 }
@@ -719,7 +724,7 @@ GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 					}
 					else
 					{
-						ChangeCarRoad(b, c);
+						ChangeCarRoad(b, c, options);
 					}
 				}
 
@@ -750,7 +755,7 @@ GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 					}
 					else
 					{
-						ChangeCarRoad(b, c);
+						ChangeCarRoad(b, c, options);
 					}
 				}
 				break;
