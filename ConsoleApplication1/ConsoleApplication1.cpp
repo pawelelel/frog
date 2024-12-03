@@ -27,19 +27,20 @@ enum ColorPairs
 	FrogPair = 2,
 	RoadPair = 3,
 	HomePair = 4,
-	YellowFontPair = 5,
+	TaxiFontPair = 5,
 	FrogBloodFontPair = 6,
 	BloodPair = 7,
 	WindowPair = 8,
 	BrickPair = 9,
 	GrassFontPair = 10,
-	BadCarPair = 10,
-	FriendlyCarPair = 11,
-	StorkPair = 12,
+	BadCarPair = 11,
+	FriendlyCarPair = 12,
+	StorkPair = 13
 };
 
 enum Colors
 {
+	// TODO: nie powinnismy uzywac predefiniwoanych kolorow jak WHITE czy YELLOW
 	Black = COLOR_BLACK,
 	Blue = COLOR_BLUE,
 	Green = COLOR_GREEN,
@@ -48,12 +49,14 @@ enum Colors
 	Magenta = COLOR_MAGENTA,
 	Yellow = COLOR_YELLOW,
 	White = COLOR_WHITE,
-	GrassColor = 8,
-	FrogColor = 9,
-	RoadColor = 10,
-	Brick = 11,
-	FrogBlood = 12,
-	Window = 13
+	GrassFontColor = 8,
+	GrassBackColor = 9,
+	FrogFontColor = 10,
+	FrogBackColor = 11,
+	RoadColor = 12,
+	BrickColor = 13,
+	FrogBloodColor = 14,
+	WindowColor = 15
 };
 
 enum State
@@ -153,12 +156,19 @@ struct RoadOptions
 struct BuildingOptions
 {
 	int buildingsNumber;
-	char skin[2];
+	char* skin;
+};
+
+struct RGB
+{
+	short r, g, b;
 };
 
 struct ColorsOptions
 {
-
+	// TODO: tu dodac parametry dla kolorow
+	RGB GrassFont, GrassBack;
+	RGB FrogFont, FrogBack;
 };
 
 struct GeneralOptions
@@ -170,7 +180,7 @@ struct GeneralOptions
 
 struct FilesOptions
 {
-	char const* bestScoresFileName;
+	char* bestScoresFileName;
 };
 
 struct Options
@@ -312,7 +322,7 @@ void EndPair(int pairId)
 	attr_off(COLOR_PAIR(pairId), NULL);
 }
 
-WINDOW* InitWindow()
+WINDOW* InitWindow(const ColorsOptions& colors)
 {
 	// curses init
 	WINDOW*win = initscr();
@@ -323,23 +333,26 @@ WINDOW* InitWindow()
 	{
 		start_color();
 
-		InitColor(GrassColor, 65, 152, 10);
-		InitColor(FrogColor, 153, 198, 142);
+		// TODO: tu pobierac kolory z parametrow
+		InitColor(GrassFontColor, colors.GrassFont.r, colors.GrassFont.g, colors.GrassFont.b);
+		InitColor(GrassBackColor, colors.GrassBack.r, colors.GrassBack.g, colors.GrassBack.b);
+		InitColor(FrogFontColor, colors.FrogFont.r, colors.FrogFont.g, colors.FrogFont.b);
+		InitColor(FrogBackColor, colors.FrogBack.r, colors.FrogBack.g, colors.FrogBack.b);
 		InitColor(RoadColor, 179, 179, 179);
-		InitColor(Brick, 192, 50, 72);
-		InitColor(FrogBlood, 120, 6, 6);
-		InitColor(Window, 0, 153, 255);
+		InitColor(BrickColor, 192, 50, 72);
+		InitColor(FrogBloodColor, 120, 6, 6);
+		InitColor(WindowColor, 0, 153, 255);
 
-		InitColorPair(GrassPair, GrassColor, GrassColor);
-		InitColorPair(FrogPair, FrogColor, Black);
+		InitColorPair(GrassPair, GrassFontColor, GrassBackColor);
+		InitColorPair(FrogPair, FrogFontColor, FrogBackColor);
 		InitColorPair(RoadPair, RoadColor, RoadColor);
-		InitColorPair(HomePair, Black, Brick);
-		InitColorPair(YellowFontPair, Yellow, Black);
-		InitColorPair(FrogBloodFontPair, FrogBlood, Black);
-		InitColorPair(BloodPair, FrogBlood, FrogBlood);
-		InitColorPair(WindowPair, Window, Black);
-		InitColorPair(BrickPair, Brick, Black);
-		InitColorPair(GrassFontPair, GrassColor, Black);
+		InitColorPair(HomePair, Black, BrickColor);
+		InitColorPair(TaxiFontPair, Yellow, Black);
+		InitColorPair(FrogBloodFontPair, FrogBloodColor, Black);
+		InitColorPair(BloodPair, FrogBloodColor, FrogBloodColor);
+		InitColorPair(WindowPair, WindowColor, Black);
+		InitColorPair(BrickPair, BrickColor, Black);
+		InitColorPair(GrassFontPair, GrassFontColor, Black);
 		InitColorPair(BadCarPair, Red, Black);
 		InitColorPair(FriendlyCarPair, Green, Black);
 		InitColorPair(StorkPair, Red, White);
@@ -865,9 +878,9 @@ void DrawCar(const Board* board, const Options* options, int i, int UpperStatusA
 		}
 		case Taxi:
 		{
-			StartPair(YellowFontPair);
+			StartPair(TaxiFontPair);
 			printw(carsChars[c.size]);
-			EndPair(YellowFontPair);
+			EndPair(TaxiFontPair);
 			break;
 		}
 	}
@@ -1240,14 +1253,14 @@ void DrawYouLost1(GameOverMessageData* data)
 	printw("                               /"); StartPair(WindowPair); printw("/###########"); EndPair(WindowPair); printw("||"); StartPair(WindowPair); printw("#########"); EndPair(WindowPair); printw("\n");
 	printw("                              /"); StartPair(WindowPair); printw("/############"); EndPair(WindowPair); printw("||"); StartPair(WindowPair); printw("#########"); EndPair(WindowPair); printw("\n");
 	printw("                             //-------------++---------\n");
-	StartPair(YellowFontPair); printw("\\"); EndPair(YellowFontPair); printw("+--------------------------++--------------++---------\n");
+	StartPair(TaxiFontPair); printw("\\"); EndPair(TaxiFontPair); printw("+--------------------------++--------------++---------\n");
 }
 
 void DrawYouLost2(GameOverMessageData* data)
 {
-	StartPair(YellowFontPair); printw("-###"); EndPair(YellowFontPair); printw("                         |           O  ||         \n");
-	StartPair(YellowFontPair); printw("-###"); EndPair(YellowFontPair); printw("       ______            |              ||         \n");
-	StartPair(YellowFontPair); printw("/"); EndPair(YellowFontPair); printw("|       / ,-~-, \\           |              ||         \n");
+	StartPair(TaxiFontPair); printw("-###"); EndPair(TaxiFontPair); printw("                         |           O  ||         \n");
+	StartPair(TaxiFontPair); printw("-###"); EndPair(TaxiFontPair); printw("       ______            |              ||         \n");
+	StartPair(TaxiFontPair); printw("/"); EndPair(TaxiFontPair); printw("|       / ,-~-, \\           |              ||         \n");
 	StartPair(FrogBloodFontPair); printw(" |"); EndPair(FrogBloodFontPair);  StartPair(BloodPair); printw("  "); EndPair(BloodPair);  printw("    // \\   / \\\\          |              ||\n");
 	StartPair(FrogBloodFontPair); printw(" |"); EndPair(FrogBloodFontPair); StartPair(BloodPair); printw("   "); EndPair(BloodPair); printw("  |,   \\ /   ,|         |              ||\n");
 }
@@ -1482,8 +1495,9 @@ Options* CreateOptions()
 	options->road.roadNumber = 10;
 
 	options->building.buildingsNumber = 10;
-	options->building.skin[0] = 'A';
-	options->building.skin[1] = '\0';
+
+	options->building.skin = new char[2];
+	strcpy(options->building.skin, "A");
 
 	options->stork.startX = 0;
 	options->stork.startY = 0;
@@ -1496,8 +1510,14 @@ Options* CreateOptions()
 	options->useSeed = false;
 	options->seed = 1;
 
-	options->files.bestScoresFileName = "best.txt";
+	options->files.bestScoresFileName = new char[9];
+	strcpy(options->files.bestScoresFileName, "best.txt");
 
+	// TODO: tu dodac domyslne wartosci kolorow
+	options->colors.GrassFont = { 65,152,10 };
+	options->colors.GrassBack = { 65,152,10 };
+	options->colors.FrogFont = { 153, 198, 142 };
+	options->colors.FrogBack = { 0,0,0 };
 	return options;
 }
 
@@ -1517,6 +1537,7 @@ bool StartsWith(const char* str, const char* begin)
 	return true;
 }
 
+// TODO: do usuniecia po przerobieniu odczytu parametrow
 int GetInt(char* str)
 {
 	char* pos = strchr(str, '=');
@@ -1529,6 +1550,7 @@ int GetInt(char* str)
 	return result;
 }
 
+// TODO: do usuniecia po przerobieniu odczytu parametrow
 char* GetString(char* str)
 {
 	char* pos = strchr(str, '=');
@@ -1546,6 +1568,54 @@ char* GetString(char* str)
 	return pos + 1;
 }
 
+void ReadIntOption(char* buffer, const char* name, int& var)
+{
+	if (StartsWith(buffer, name))
+	{
+		char* pos = strchr(buffer, '=');
+		if (pos != NULL)
+		{
+			var = atoi(pos + 1);
+		}
+	}
+}
+
+void ReadStringOption(char* buffer, const char* name, char*& var)
+{
+	if (StartsWith(buffer, name))
+	{
+		char* pos = strchr(buffer, '=');
+		if (pos != NULL)
+		{
+			pos++;
+			size_t len = strlen(pos);
+			if (pos[len - 1] == '\n')
+			{
+				pos[len - 1] = '\0';
+				len--;
+			}
+
+			delete var;
+			var = new char[len];
+			strcpy(var, pos);
+		}
+	}
+}
+
+void ReadRgbOption(char* buffer, const char* name, RGB& var)
+{
+	if (StartsWith(buffer, name))
+	{
+		char* pos = strchr(buffer, '=');
+		if (pos != NULL)
+		{
+			var.r = strtol(pos + 1, NULL, 16);
+			var.g = strtol(pos + 4, NULL, 16);
+			var.b = strtol(pos + 7, NULL, 16);
+		}
+	}
+}
+
 Options* ReadOptions(Options* options)
 {
 	FILE* file = fopen("frog.config", "r");
@@ -1555,11 +1625,10 @@ Options* ReadOptions(Options* options)
 		char buffer[bufferSize];
 		while (fgets(buffer, bufferSize - 1, file))
 		{
-			if (StartsWith(buffer, "general.startScreenWidth"))
-			{
-				options->general.startScreenWidth = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "general.startScreenHeight"))
+			// TODO: paramsy
+			ReadIntOption(buffer, "general.startScreenWidth", options->general.startScreenWidth);
+
+			if (StartsWith(buffer, "general.startScreenHeight"))
 			{
 				options->general.startScreenHeight = GetInt(buffer);
 			}
@@ -1643,14 +1712,6 @@ Options* ReadOptions(Options* options)
 			{
 				options->seed = GetInt(buffer);
 			}
-			else if (StartsWith(buffer, "files.bestScoresFileName"))
-			{
-				options->files.bestScoresFileName = GetString(buffer);
-			}
-			else if (StartsWith(buffer, "building.skin"))
-			{
-				options->building.skin[0] = GetString(buffer)[0];
-			}
 			else if (StartsWith(buffer, "stork.skin"))
 			{
 				options->stork.skin[0] = GetString(buffer)[0];
@@ -1682,6 +1743,12 @@ Options* ReadOptions(Options* options)
 				options->car.truckSkin[1] = GetString(buffer)[1];
 				options->car.truckSkin[2] = GetString(buffer)[2];
 			}
+
+			ReadStringOption(buffer, "building.skin", options->building.skin);
+			ReadStringOption(buffer, "files.bestScoresFileName", options->files.bestScoresFileName);
+
+			// TODO: tu dodac odczyt parametrow kolorow
+			ReadRgbOption(buffer, "color.grass.font", options->colors.GrassFont);
 		}
 
 		fclose(file);
@@ -1703,7 +1770,7 @@ int main()
 		srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
 	}
 
-	WINDOW* win = InitWindow();
+	WINDOW* win = InitWindow(options->colors);
 
 	GameState Start = CreateStart(options);
 	GameState Game = CreateGame(options);
@@ -1745,3 +1812,4 @@ int main()
 }
 
 // przy delete zrzutowac wskaznik przed delete
+// wszystkie parametry umieœciæ w pliku
