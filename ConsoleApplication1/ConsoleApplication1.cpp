@@ -35,28 +35,40 @@ enum ColorPairs
 	GrassFontPair = 10,
 	BadCarPair = 11,
 	FriendlyCarPair = 12,
-	StorkPair = 13
+	StorkPair = 13,
+	CarLightsPair = 14,
+	BuildingPair = 15,
 };
 
 enum Colors
 {
 	// TODO: nie powinnismy uzywac predefiniwoanych kolorow jak WHITE czy YELLOW
-	Black = COLOR_BLACK,
-	Blue = COLOR_BLUE,
-	Green = COLOR_GREEN,
-	Cyan = COLOR_CYAN,
-	Red = COLOR_RED,
-	Magenta = COLOR_MAGENTA,
-	Yellow = COLOR_YELLOW,
-	White = COLOR_WHITE,
-	GrassFontColor = 8,
-	GrassBackColor = 9,
-	FrogFontColor = 10,
-	FrogBackColor = 11,
-	RoadColor = 12,
-	BrickColor = 13,
-	FrogBloodColor = 14,
-	WindowColor = 15
+	GrassFontColor = 1,
+	GrassBackColor = 2,
+	FrogFontColor = 3,
+	FrogBackColor = 4,
+	RoadFontColor = 5,
+	RoadBackColor = 6,
+	BrickColor = 7,
+	FrogBloodFontColor = 8,
+	FrogBloodBackColor = 9,
+	HomeFontColor = 10,
+	HomeBackColor = 11,
+	WindowFontColor = 12,
+	WindowBackColor = 13,
+	TaxiFontColor = 14,
+	TaxiBackColor = 15,
+	BackgroundColor = 16,
+	BadCarFontColor = 17,
+	BadCarBackColor = 18,
+	FriendlyCarFontColor = 19,
+	FriendlyCarBackColor = 20,
+	StorkFontColor = 21,
+	StorkBackColor = 22,
+	CarLightFontColor = 23,
+	CarLightBackColor = 24,
+	BuildingFontColor = 25,
+	BuildingBackColor = 26,
 };
 
 enum State
@@ -167,8 +179,20 @@ struct RGB
 struct ColorsOptions
 {
 	// TODO: tu dodac parametry dla kolorow
+	RGB Background;
 	RGB GrassFont, GrassBack;
 	RGB FrogFont, FrogBack;
+	RGB RoadFont, RoadBack;
+	RGB HomeFont, HomeBack;
+	RGB TaxiFont, TaxiBack;
+	RGB FrogBloodFont, FrogBloodBack;
+	RGB WindowFont, WindowBack;
+	RGB BrickFont, BrickBack;
+	RGB BadCarFont, BadCarBack;
+	RGB FriendlyCarFont, FriendlyCarBack;
+	RGB StorkFont, StorkBack;
+	RGB LightFont, LightBack;
+	RGB BuildingFont, BuildingBack;
 };
 
 struct GeneralOptions
@@ -334,28 +358,61 @@ WINDOW* InitWindow(const ColorsOptions& colors)
 		start_color();
 
 		// TODO: tu pobierac kolory z parametrow
+		InitColor(BackgroundColor, colors.Background.r, colors.Background.g, colors.Background.b);
+		InitColor(BrickColor, colors.BrickFont.r, colors.BrickFont.g, colors.BrickFont.b);
+
+		InitColor(CarLightFontColor, colors.LightFont.r, colors.LightFont.g, colors.LightFont.b);
+		InitColor(CarLightBackColor, colors.LightBack.r, colors.LightBack.g, colors.LightBack.b);
+
 		InitColor(GrassFontColor, colors.GrassFont.r, colors.GrassFont.g, colors.GrassFont.b);
 		InitColor(GrassBackColor, colors.GrassBack.r, colors.GrassBack.g, colors.GrassBack.b);
+
 		InitColor(FrogFontColor, colors.FrogFont.r, colors.FrogFont.g, colors.FrogFont.b);
 		InitColor(FrogBackColor, colors.FrogBack.r, colors.FrogBack.g, colors.FrogBack.b);
-		InitColor(RoadColor, 179, 179, 179);
-		InitColor(BrickColor, 192, 50, 72);
-		InitColor(FrogBloodColor, 120, 6, 6);
-		InitColor(WindowColor, 0, 153, 255);
+
+		InitColor(RoadFontColor, colors.RoadFont.r, colors.RoadFont.g, colors.RoadFont.b);
+		InitColor(RoadBackColor, colors.RoadBack.r, colors.RoadBack.g, colors.RoadBack.b);
+
+		InitColor(HomeFontColor, colors.HomeFont.r, colors.HomeFont.g, colors.HomeFont.b);
+		InitColor(HomeBackColor, colors.HomeBack.r, colors.HomeBack.g, colors.HomeBack.b);
+
+		InitColor(HomeFontColor, colors.FrogBloodFont.r, colors.FrogBloodFont.g, colors.FrogBloodFont.b);
+		InitColor(HomeBackColor, colors.FrogBloodBack.r, colors.FrogBloodBack.g, colors.FrogBloodBack.b);
+
+		InitColor(WindowFontColor, colors.WindowFont.r, colors.WindowFont.g, colors.WindowFont.b);
+		InitColor(WindowBackColor, colors.WindowBack.r, colors.WindowBack.g, colors.WindowBack.b);
+
+		InitColor(TaxiFontColor, colors.TaxiFont.r, colors.TaxiFont.g, colors.TaxiFont.b);
+		InitColor(TaxiBackColor, colors.TaxiBack.r, colors.TaxiBack.g, colors.TaxiBack.b);
+
+		InitColor(BadCarFontColor, colors.BadCarFont.r, colors.BadCarFont.g, colors.BadCarFont.b);
+		InitColor(BadCarBackColor, colors.BadCarBack.r, colors.BadCarBack.g, colors.BadCarBack.b);
+
+		InitColor(FriendlyCarFontColor, colors.FriendlyCarFont.r, colors.FriendlyCarFont.g, colors.FriendlyCarFont.b);
+		InitColor(FriendlyCarBackColor, colors.FriendlyCarBack.r, colors.FriendlyCarBack.g, colors.FriendlyCarBack.b);
+
+		InitColor(StorkFontColor, colors.StorkFont.r, colors.StorkFont.g, colors.StorkFont.b);
+		InitColor(StorkBackColor, colors.StorkBack.r, colors.StorkBack.g, colors.StorkBack.b);
+
+		InitColor(BuildingFontColor, colors.BuildingFont.r, colors.BuildingFont.g, colors.BuildingFont.b);
+		InitColor(BuildingBackColor, colors.BuildingBack.r, colors.BuildingBack.g, colors.BuildingBack.b);
+
 
 		InitColorPair(GrassPair, GrassFontColor, GrassBackColor);
 		InitColorPair(FrogPair, FrogFontColor, FrogBackColor);
-		InitColorPair(RoadPair, RoadColor, RoadColor);
-		InitColorPair(HomePair, Black, BrickColor);
-		InitColorPair(TaxiFontPair, Yellow, Black);
-		InitColorPair(FrogBloodFontPair, FrogBloodColor, Black);
-		InitColorPair(BloodPair, FrogBloodColor, FrogBloodColor);
-		InitColorPair(WindowPair, WindowColor, Black);
-		InitColorPair(BrickPair, BrickColor, Black);
-		InitColorPair(GrassFontPair, GrassFontColor, Black);
-		InitColorPair(BadCarPair, Red, Black);
-		InitColorPair(FriendlyCarPair, Green, Black);
-		InitColorPair(StorkPair, Red, White);
+		InitColorPair(RoadPair, RoadFontColor, RoadBackColor);
+		InitColorPair(HomePair, HomeFontColor, HomeBackColor);
+		InitColorPair(TaxiFontPair, TaxiFontColor, TaxiBackColor);
+		InitColorPair(FrogBloodFontPair, FrogBloodFontColor, BackgroundColor);
+		InitColorPair(BloodPair, FrogBloodFontColor, FrogBloodBackColor);
+		InitColorPair(WindowPair, WindowFontColor, WindowBackColor);
+		InitColorPair(FriendlyCarPair, FriendlyCarFontColor, FriendlyCarBackColor);
+		InitColorPair(BadCarPair, BadCarFontColor, BadCarBackColor);
+		InitColorPair(BrickPair, BrickColor, BackgroundColor);
+		InitColorPair(GrassFontPair, GrassFontColor, BackgroundColor);
+		InitColorPair(StorkPair, StorkFontColor, StorkBackColor);
+		InitColorPair(CarLightsPair, CarLightFontColor, CarLightBackColor);
+		InitColorPair(BuildingPair, BuildingFontColor, BuildingBackColor);
 	}
 
 	return win;
@@ -835,9 +892,9 @@ void DrawBuildings(int upperStatusAreaSize, const Building* buildings, const Opt
 	{
 		Building b = buildings[i];
 		move(b.roadNumber + upperStatusAreaSize, b.x);
-		StartPair(BrickPair);
+		StartPair(BuildingPair);
 		printw(options->building.skin);
-		EndPair(BrickPair);
+		EndPair(BuildingPair);
 	}
 }
 
@@ -1253,14 +1310,14 @@ void DrawYouLost1(GameOverMessageData* data)
 	printw("                               /"); StartPair(WindowPair); printw("/###########"); EndPair(WindowPair); printw("||"); StartPair(WindowPair); printw("#########"); EndPair(WindowPair); printw("\n");
 	printw("                              /"); StartPair(WindowPair); printw("/############"); EndPair(WindowPair); printw("||"); StartPair(WindowPair); printw("#########"); EndPair(WindowPair); printw("\n");
 	printw("                             //-------------++---------\n");
-	StartPair(TaxiFontPair); printw("\\"); EndPair(TaxiFontPair); printw("+--------------------------++--------------++---------\n");
+	StartPair(CarLightsPair); printw("\\"); EndPair(CarLightsPair); printw("+--------------------------++--------------++---------\n");
 }
 
 void DrawYouLost2(GameOverMessageData* data)
 {
-	StartPair(TaxiFontPair); printw("-###"); EndPair(TaxiFontPair); printw("                         |           O  ||         \n");
-	StartPair(TaxiFontPair); printw("-###"); EndPair(TaxiFontPair); printw("       ______            |              ||         \n");
-	StartPair(TaxiFontPair); printw("/"); EndPair(TaxiFontPair); printw("|       / ,-~-, \\           |              ||         \n");
+	StartPair(CarLightsPair); printw("-###"); EndPair(CarLightsPair); printw("                         |           O  ||         \n");
+	StartPair(CarLightsPair); printw("-###"); EndPair(CarLightsPair); printw("       ______            |              ||         \n");
+	StartPair(CarLightsPair); printw("/"); EndPair(CarLightsPair); printw("|       / ,-~-, \\           |              ||         \n");
 	StartPair(FrogBloodFontPair); printw(" |"); EndPair(FrogBloodFontPair);  StartPair(BloodPair); printw("  "); EndPair(BloodPair);  printw("    // \\   / \\\\          |              ||\n");
 	StartPair(FrogBloodFontPair); printw(" |"); EndPair(FrogBloodFontPair); StartPair(BloodPair); printw("   "); EndPair(BloodPair); printw("  |,   \\ /   ,|         |              ||\n");
 }
@@ -1514,10 +1571,69 @@ Options* CreateOptions()
 	strcpy(options->files.bestScoresFileName, "best.txt");
 
 	// TODO: tu dodac domyslne wartosci kolorow
+
+	// default colors
+
+	options->colors.Background = { 0, 0, 0 };
+	options->colors.BrickFont = { 0, 0, 0 };
+	options->colors.BrickBack = { 0, 0, 0 };
+
 	options->colors.GrassFont = { 65,152,10 };
 	options->colors.GrassBack = { 65,152,10 };
+
+	options->colors.FrogFont = { 0, 0, 0 };
+	options->colors.FrogBack = { 0,0,0 };
+
+	options->colors.RoadFont = { 0, 0, 0 };
+	options->colors.RoadBack = { 0, 0, 0 };
+
+	options->colors.FrogBloodFont = { 0, 0, 0 };
+	options->colors.FrogBloodBack = { 0, 0, 0 };
+
+	options->colors.HomeFont = { 10, 10, 10 };
+	options->colors.HomeBack = { 10, 10, 10 };
+	/*
+	options->colors.Background = { 0, 0, 0 };
+	options->colors.BrickFont = { 188, 74, 60};
+	options->colors.BrickBack = { 0, 0, 0};
+
+	options->colors.GrassFont = { 65,152,10 };
+	options->colors.GrassBack = { 65,152,10 };
+
 	options->colors.FrogFont = { 153, 198, 142 };
 	options->colors.FrogBack = { 0,0,0 };
+
+	options->colors.RoadFont = { 179, 179, 179 };
+	options->colors.RoadBack = { 179, 179, 179 };
+
+	options->colors.FrogBloodFont = { 120, 6, 6 };
+	options->colors.FrogBloodBack = { 120, 6, 6 };
+
+	options->colors.HomeFont = { 188, 74, 60 };
+	options->colors.HomeBack = { 65, 152, 10 };
+	*/
+
+	options->colors.TaxiFont = { 0, 0, 0 };
+	options->colors.TaxiBack = { 0, 0, 0 };
+
+	options->colors.WindowFont = { 0, 0, 0 };
+	options->colors.WindowBack = { 0, 0, 0 };
+
+	options->colors.BadCarFont = { 0, 0, 0 };
+	options->colors.BadCarBack = { 0, 0, 0 };
+
+	options->colors.FriendlyCarFont = { 0, 0, 0 };
+	options->colors.FriendlyCarBack = { 0, 0, 0 };
+
+	options->colors.StorkFont = { 0, 0, 0 };
+	options->colors.StorkBack = { 0, 0, 0 };
+
+	options->colors.LightFont = { 0, 0, 0 };
+	options->colors.LightBack = { 0, 0, 0 };
+
+	options->colors.BuildingFont = { 10, 10, 10 };
+	options->colors.BuildingBack = { 10, 10, 10 };
+
 	return options;
 }
 
