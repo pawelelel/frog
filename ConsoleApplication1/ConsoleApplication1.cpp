@@ -707,6 +707,32 @@ void ChangeCarRoad(const Board* b, Car& c, const Options* options)
 	delete[] streets;
 }
 
+void WrapLeft(Car& c, Board* b, const Options* options)
+{
+	int wrap = rand() % 100;
+	if (wrap > options->car.wrapChances)
+	{
+		c.x = b->width - c.size + 1;
+	}
+	else
+	{
+		ChangeCarRoad(b, c, options);
+	}
+}
+
+void WrapRight(Car& c, Board* b, const Options* options)
+{
+	int wrap = rand() % 100;
+	if (wrap > options->car.wrapChances)
+	{
+		c.x = 1.0f - c.size;
+	}
+	else
+	{
+		ChangeCarRoad(b, c, options);
+	}
+}
+
 GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 {
 	for (int i = 0; i < b->carsNumber; ++i)
@@ -721,28 +747,15 @@ GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 				{
 					break;
 				}
-
 				if (c.type == Taxi && (int)round(c.x) - 1 == b->frog.x && c.roadNumber == b->frog.y)
 				{
 					FrogGetInTaxi(b, c);
 				}
-
 				c.x -= deltaTime * c.speed / 1000.0f;
-
 				if (c.x <= 0)
 				{
-					int wrap = rand() % 100;
-
-					if (wrap > options->car.wrapChances)
-					{
-						c.x = b->width - c.size + 1;
-					}
-					else
-					{
-						ChangeCarRoad(b, c, options);
-					}
+					WrapLeft(c, b, options);
 				}
-
 				break;
 			}
 			case Right:
@@ -752,40 +765,25 @@ GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 				{
 					break;
 				}
-
 				if (c.type == Taxi && (int)round(c.x) + 1 == b->frog.x && c.roadNumber == b->frog.y)
 				{
 					FrogGetInTaxi(b, c);
 				}
-
 				c.x += deltaTime * c.speed / 1000.0f;
-
 				if (c.x >= b->width)
 				{
-					int wrap = rand() % 100;
-
-					if (wrap > options->car.wrapChances)
-					{
-						c.x = 1.0f - c.size;
-					}
-					else
-					{
-						ChangeCarRoad(b, c, options);
-					}
+					WrapRight(c, b, options);
 				}
 				break;
 			}
 		}
-
 		ChangeCarSpeed(c, options->car);
-
 		if (IsFrogHitted(b->frog, c))
 		{
 			GameOverMessageData* data = new GameOverMessageData{ false, 0 };
 			return { ChangeToGameOver, data };
 		}
 	}
-
 	return { ChangeNoChange, NULL };
 }
 
@@ -1464,6 +1462,8 @@ GameState CreateGameOver(Options* options)
 	return gameOver;
 }
 
+// read options
+
 int ReadKeys()
 {
 	if (_kbhit())
@@ -1503,26 +1503,8 @@ GameStateChange MainLoop(const GameState& current, const Options* options, WINDO
 	}
 }
 
-Options* CreateOptions()
+void CarVariablesInitialization(Options* options)
 {
-	Options* options = new Options;
-
-	// variables initialization
-
-	options->general.startScreenWidth = 53;
-	options->general.startScreenHeight = 23;
-	options->general.gameOverScreenWidth = 56;
-	options->general.gameOverScreenHeight = 45;
-	options->general.maxTime = 100;
-
-	options->frog.skinOne = new char[2];
-	strcpy(options->frog.skinOne, "F");
-	options->frog.skinTwo = new char[2];
-	strcpy(options->frog.skinTwo, "f");
-
-	options->home.skin = new char[2];
-	strcpy(options->home.skin, "H");
-
 	options->car.speedUpFactor = 5;
 	options->car.speedUpChances = 10;
 	options->car.slowDownChances = 10;
@@ -1541,6 +1523,25 @@ Options* CreateOptions()
 
 	options->car.truckSkin = new char[4];
 	strcpy(options->car.truckSkin, "###");
+}
+
+void VariablesInitialization(Options* options)
+{
+	options->general.startScreenWidth = 53;
+	options->general.startScreenHeight = 23;
+	options->general.gameOverScreenWidth = 56;
+	options->general.gameOverScreenHeight = 45;
+	options->general.maxTime = 100;
+
+	options->frog.skinOne = new char[2];
+	strcpy(options->frog.skinOne, "F");
+	options->frog.skinTwo = new char[2];
+	strcpy(options->frog.skinTwo, "f");
+
+	options->home.skin = new char[2];
+	strcpy(options->home.skin, "H");
+
+	CarVariablesInitialization(options);
 
 	options->road.roadNumber = 10;
 
@@ -1561,14 +1562,30 @@ Options* CreateOptions()
 
 	options->files.bestScoresFileName = new char[9];
 	strcpy(options->files.bestScoresFileName, "best.txt");
+}
 
-	// Colors initialization
+void FrogRelatedColorsInitializationAndGrass(Options* options)
+{
+	options->colors.FrogFont = { 153, 198, 142 };
+	options->colors.FrogBack = { 0, 0, 0 };
+
+	options->colors.FrogBloodFontFont = { 120, 6, 6 };
+	options->colors.FrogBloodFontBack = { 0, 0, 0 };
+
+	options->colors.BloodFont = { 120, 6, 6 };
+	options->colors.BloodBack = { 120, 6, 6 };
 
 	options->colors.GrassFont = { 65,152,10 };
 	options->colors.GrassBack = { 65, 152, 10 };
+}
 
-	options->colors.FrogFont = { 153, 198, 142 };
-	options->colors.FrogBack = { 0, 0, 0 };
+Options* CreateOptions()
+{
+	Options* options = new Options;
+	// variables initialization
+	VariablesInitialization(options);
+	// Colors initialization
+	FrogRelatedColorsInitializationAndGrass(options);
 
 	options->colors.RoadFont = { 179, 179, 179 };
 	options->colors.RoadBack = { 179, 179, 179 };
@@ -1578,12 +1595,6 @@ Options* CreateOptions()
 
 	options->colors.TaxiFont = { 255, 255, 0 };
 	options->colors.TaxiBack = { 0, 0, 0 };
-
-	options->colors.FrogBloodFontFont = { 120, 6, 6 };
-	options->colors.FrogBloodFontBack = { 0, 0, 0 };
-
-	options->colors.BloodFont = { 120, 6, 6 };
-	options->colors.BloodBack = { 120, 6, 6 };
 
 	options->colors.WindowFont = { 0, 0, 255 };
 	options->colors.WindowBack = { 0, 0, 0 };
@@ -1608,7 +1619,6 @@ Options* CreateOptions()
 
 	options->colors.BuildingFont = { 188, 74, 60 };
 	options->colors.BuildingBack = { 65, 152, 10 };
-
 	return options;
 }
 
@@ -1707,6 +1717,95 @@ void ReadRgbOption(char* buffer, const char* name, RGB& var)
 	}
 }
 
+void ReadCarOptions(char buffer[], Options* options)
+{
+	ReadIntOption(buffer, "car.speedUpFactor", options->car.speedUpFactor);
+	ReadIntOption(buffer, "car.speedUpChances", options->car.speedUpChances);
+	ReadIntOption(buffer, "car.slowDownChances", options->car.slowDownChances);
+	ReadIntOption(buffer, "car.returnChances", options->car.returnChances);
+	ReadIntOption(buffer, "car.wrapChances", options->car.wrapChances);
+	ReadIntOption(buffer, "car.breakDistance", options->car.breakDistance);
+	ReadIntOption(buffer, "car.carsNumber", options->car.carsNumber);
+	ReadIntOption(buffer, "car.minSpeed", options->car.minSpeed);
+	ReadIntOption(buffer, "car.maxSpeed", options->car.maxSpeed);
+	ReadStringOption(buffer, "car.bikeSkin", options->car.bikeSkin);
+	ReadStringOption(buffer, "car.carSkin", options->car.carSkin);
+	ReadStringOption(buffer, "car.truckSkin", options->car.truckSkin);
+}
+
+void ReadGeneralOptions(char buffer[], Options* options)
+{
+	ReadIntOption(buffer, "general.startScreenWidth", options->general.startScreenWidth);
+	ReadIntOption(buffer, "general.startScreenHeight", options->general.startScreenHeight);
+	ReadIntOption(buffer, "general.gameOverScreenWidth", options->general.gameOverScreenWidth);
+	ReadIntOption(buffer, "general.gameOverScreenHeight", options->general.gameOverScreenHeight);
+	ReadIntOption(buffer, "general.maxTime", options->general.maxTime);
+}
+
+void ReadStorkOptions(char buffer[], Options* options)
+{
+	ReadIntOption(buffer, "stork.startX", options->stork.startX);
+	ReadIntOption(buffer, "stork.startY", options->stork.startY);
+
+	ReadFloatOption(buffer, "stork.speed", options->stork.speed);
+	ReadStringOption(buffer, "stork.skin", options->stork.skin);
+}
+
+void ReadColorsOptions1(char buffer[], Options* options)
+{
+	ReadRgbOption(buffer, "colors.GrassFont", options->colors.GrassFont);
+	ReadRgbOption(buffer, "colors.GrassBack", options->colors.GrassBack);
+
+	ReadRgbOption(buffer, "colors.FrogFont", options->colors.FrogFont);
+	ReadRgbOption(buffer, "colors.FrogBack", options->colors.FrogBack);
+
+	ReadRgbOption(buffer, "colors.RoadFont", options->colors.RoadFont);
+	ReadRgbOption(buffer, "colors.RoadBack", options->colors.RoadBack);
+
+	ReadRgbOption(buffer, "colors.HomeFont", options->colors.HomeFont);
+	ReadRgbOption(buffer, "colors.HomeBack", options->colors.HomeBack);
+
+	ReadRgbOption(buffer, "colors.TaxiFont", options->colors.TaxiFont);
+	ReadRgbOption(buffer, "colors.TaxiBack", options->colors.TaxiBack);
+}
+
+void ReadColorsOptions2(char buffer[], Options* options)
+{
+
+	ReadRgbOption(buffer, "colors.FrogBloodFontFont", options->colors.FrogBloodFontFont);
+	ReadRgbOption(buffer, "colors.FrogBloodFontBack", options->colors.FrogBloodFontBack);
+
+	ReadRgbOption(buffer, "colors.BloodFont", options->colors.BloodFont);
+	ReadRgbOption(buffer, "colors.BloodBack", options->colors.BloodBack);
+
+	ReadRgbOption(buffer, "colors.WindowFont", options->colors.WindowFont);
+	ReadRgbOption(buffer, "colors.WindowBack", options->colors.WindowBack);
+}
+
+void ReadColorsOptions3(char buffer[], Options* options)
+{
+	ReadRgbOption(buffer, "colors.BrickFont", options->colors.BrickFont);
+	ReadRgbOption(buffer, "colors.BrickBack", options->colors.BrickBack);
+
+	ReadRgbOption(buffer, "colors.GrassHomeFont", options->colors.GrassHomeFont);
+	ReadRgbOption(buffer, "colors.GrassHomeBack", options->colors.GrassHomeBack);
+
+	ReadRgbOption(buffer, "colors.BadCarFont", options->colors.BadCarFont);
+	ReadRgbOption(buffer, "colors.BadCarBack", options->colors.BadCarBack);
+
+	ReadRgbOption(buffer, "colors.FriendlyCarFont", options->colors.FriendlyCarFont);
+	ReadRgbOption(buffer, "colors.FriendlyCarBack", options->colors.FriendlyCarBack);
+
+	ReadRgbOption(buffer, "colors.StorkFont", options->colors.StorkFont);
+	ReadRgbOption(buffer, "colors.StorkBack", options->colors.StorkBack);
+
+	ReadRgbOption(buffer, "colors.CarLightFont", options->colors.CarLightFont);
+	ReadRgbOption(buffer, "colors.CarLightBack", options->colors.CarLightBack);
+
+	ReadRgbOption(buffer, "colors.BuildingFont", options->colors.BuildingFont);
+	ReadRgbOption(buffer, "colors.BuildingBack", options->colors.BuildingBack);
+}
+
 Options* ReadOptions(Options* options)
 {
 	FILE* file = fopen("frog.config", "r");
@@ -1716,38 +1815,19 @@ Options* ReadOptions(Options* options)
 		char buffer[bufferSize];
 		while (fgets(buffer, bufferSize - 1, file))
 		{
-			ReadIntOption(buffer, "general.startScreenWidth", options->general.startScreenWidth);
-			ReadIntOption(buffer, "general.startScreenHeight", options->general.startScreenHeight);
-			ReadIntOption(buffer, "general.gameOverScreenWidth", options->general.gameOverScreenWidth);
-			ReadIntOption(buffer, "general.gameOverScreenHeight", options->general.gameOverScreenHeight);
-			ReadIntOption(buffer, "general.maxTime", options->general.maxTime);
+			ReadGeneralOptions(buffer, options);
 
 			ReadStringOption(buffer, "frog.skinOne", options->frog.skinOne);
 			ReadStringOption(buffer, "frog.skinTwo", options->frog.skinTwo);
 
-			ReadIntOption(buffer, "car.speedUpFactor", options->car.speedUpFactor);
-			ReadIntOption(buffer, "car.speedUpChances", options->car.speedUpChances);
-			ReadIntOption(buffer, "car.slowDownChances", options->car.slowDownChances);
-			ReadIntOption(buffer, "car.returnChances", options->car.returnChances);
-			ReadIntOption(buffer, "car.wrapChances", options->car.wrapChances);
-			ReadIntOption(buffer, "car.breakDistance", options->car.breakDistance);
-			ReadIntOption(buffer, "car.carsNumber", options->car.carsNumber);
-			ReadIntOption(buffer, "car.minSpeed", options->car.minSpeed);
-			ReadIntOption(buffer, "car.maxSpeed", options->car.maxSpeed);
-			ReadStringOption(buffer, "car.bikeSkin", options->car.bikeSkin);
-			ReadStringOption(buffer, "car.carSkin", options->car.carSkin);
-			ReadStringOption(buffer, "car.truckSkin", options->car.truckSkin);
+			ReadCarOptions(buffer, options);
 
 			ReadIntOption(buffer, "road.roadNumber", options->road.roadNumber);
 
 			ReadStringOption(buffer, "building.skin", options->building.skin);
 			ReadIntOption(buffer, "building.buildingsNumber", options->building.buildingsNumber);
 
-			ReadIntOption(buffer, "stork.startX", options->stork.startX);
-			ReadIntOption(buffer, "stork.startY", options->stork.startY);
-			
-			ReadFloatOption(buffer, "stork.speed", options->stork.speed);
-			ReadStringOption(buffer, "stork.skin", options->stork.skin);
+			ReadStorkOptions(buffer, options);
 			
 			ReadIntOption(buffer, "board.width", options->board.width);
 
@@ -1759,50 +1839,9 @@ Options* ReadOptions(Options* options)
 
 			ReadStringOption(buffer, "files.bestScoresFileName", options->files.bestScoresFileName);
 
-			ReadRgbOption(buffer, "colors.GrassFont", options->colors.GrassFont);
-			ReadRgbOption(buffer, "colors.GrassBack", options->colors.GrassBack);
-
-			ReadRgbOption(buffer, "colors.FrogFont", options->colors.FrogFont);
-			ReadRgbOption(buffer, "colors.FrogBack", options->colors.FrogBack);
-
-			ReadRgbOption(buffer, "colors.RoadFont", options->colors.RoadFont);
-			ReadRgbOption(buffer, "colors.RoadBack", options->colors.RoadBack);
-
-			ReadRgbOption(buffer, "colors.HomeFont", options->colors.HomeFont);
-			ReadRgbOption(buffer, "colors.HomeBack", options->colors.HomeBack);
-
-			ReadRgbOption(buffer, "colors.TaxiFont", options->colors.TaxiFont);
-			ReadRgbOption(buffer, "colors.TaxiBack", options->colors.TaxiBack);
-
-			ReadRgbOption(buffer, "colors.FrogBloodFontFont", options->colors.FrogBloodFontFont);
-			ReadRgbOption(buffer, "colors.FrogBloodFontBack", options->colors.FrogBloodFontBack);
-
-			ReadRgbOption(buffer, "colors.BloodFont", options->colors.BloodFont);
-			ReadRgbOption(buffer, "colors.BloodBack", options->colors.BloodBack);
-
-			ReadRgbOption(buffer, "colors.WindowFont", options->colors.WindowFont);
-			ReadRgbOption(buffer, "colors.WindowBack", options->colors.WindowBack);
-
-			ReadRgbOption(buffer, "colors.BrickFont", options->colors.BrickFont);
-			ReadRgbOption(buffer, "colors.BrickBack", options->colors.BrickBack);
-
-			ReadRgbOption(buffer, "colors.GrassHomeFont", options->colors.GrassHomeFont);
-			ReadRgbOption(buffer, "colors.GrassHomeBack", options->colors.GrassHomeBack);
-
-			ReadRgbOption(buffer, "colors.BadCarFont", options->colors.BadCarFont);
-			ReadRgbOption(buffer, "colors.BadCarBack", options->colors.BadCarBack);
-
-			ReadRgbOption(buffer, "colors.FriendlyCarFont", options->colors.FriendlyCarFont);
-			ReadRgbOption(buffer, "colors.FriendlyCarBack", options->colors.FriendlyCarBack);
-
-			ReadRgbOption(buffer, "colors.StorkFont", options->colors.StorkFont);
-			ReadRgbOption(buffer, "colors.StorkBack", options->colors.StorkBack);
-
-			ReadRgbOption(buffer, "colors.CarLightFont", options->colors.CarLightFont);
-			ReadRgbOption(buffer, "colors.CarLightBack", options->colors.CarLightBack);
-
-			ReadRgbOption(buffer, "colors.BuildingFont", options->colors.BuildingFont);
-			ReadRgbOption(buffer, "colors.BuildingBack", options->colors.BuildingBack);
+			ReadColorsOptions1(buffer, options);
+			ReadColorsOptions2(buffer, options);
+			ReadColorsOptions3(buffer, options);
 		}
 
 		fclose(file);
@@ -1810,6 +1849,8 @@ Options* ReadOptions(Options* options)
 
 	return options;
 }
+
+// main
 
 int main()
 {
