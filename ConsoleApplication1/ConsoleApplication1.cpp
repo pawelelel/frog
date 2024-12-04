@@ -86,7 +86,7 @@ enum CarType
 
 struct HomeOptions
 {
-	char skin[2];
+	char* skin;
 };
 
 struct CarOptions
@@ -104,22 +104,22 @@ struct CarOptions
 	int maxSpeed;
 	int minSpeed;
 
-	char bikeSkin[4];
-	char carSkin[4];
-	char truckSkin[4];
+	char* bikeSkin;
+	char* carSkin;
+	char* truckSkin;
 };
 
 struct FrogOptions
 {
-	char skinOne[2];
-	char skinTwo[2];
+	char* skinOne;
+	char* skinTwo;
 };
 
 struct StorkOptions
 {
 	int startX, startY;
 	float speed;
-	char skin[2];
+	char* skin;
 };
 
 struct BoardOptions
@@ -315,6 +315,79 @@ void EndPair(int pairId)
 	attr_off(COLOR_PAIR(pairId), NULL);
 }
 
+void InitColors1(const ColorsOptions& colors)
+{
+	InitColor(GrassPair, colors.GrassFont.r, colors.GrassFont.g, colors.GrassFont.b);
+	InitColor(GrassPair + 1, colors.GrassBack.r, colors.GrassBack.g, colors.GrassBack.b);
+	InitColorPair(GrassPair, GrassPair, GrassPair + 1);
+
+	InitColor(FrogPair, colors.FrogFont.r, colors.FrogFont.g, colors.FrogFont.b);
+	InitColor(FrogPair + 1, colors.FrogBack.r, colors.FrogBack.g, colors.FrogBack.b);
+	InitColorPair(FrogPair, FrogPair, FrogPair + 1);
+
+	InitColor(RoadPair, colors.RoadFont.r, colors.RoadFont.g, colors.RoadFont.b);
+	InitColor(RoadPair + 1, colors.RoadBack.r, colors.RoadBack.g, colors.RoadBack.b);
+	InitColorPair(RoadPair, RoadPair, RoadPair + 1);
+
+	InitColor(HomePair, colors.HomeFont.r, colors.HomeFont.g, colors.HomeFont.b);
+	InitColor(HomePair + 1, colors.HomeBack.r, colors.HomeBack.g, colors.HomeBack.b);
+	InitColorPair(HomePair, HomePair, HomePair + 1);
+
+	InitColor(TaxiPair, colors.TaxiFont.r, colors.TaxiFont.g, colors.TaxiFont.b);
+	InitColor(TaxiPair + 1, colors.TaxiBack.r, colors.TaxiBack.g, colors.TaxiBack.b);
+	InitColorPair(TaxiPair, TaxiPair, TaxiPair + 1);
+}
+
+void InitColors2(const ColorsOptions& colors)
+{
+	InitColor(FrogBloodFontPair, colors.FrogBloodFontFont.r, colors.FrogBloodFontFont.g, colors.FrogBloodFontFont.b);
+	InitColor(FrogBloodFontPair + 1, colors.FrogBloodFontBack.r, colors.FrogBloodFontBack.g, colors.FrogBloodFontBack.b);
+	InitColorPair(FrogBloodFontPair, FrogBloodFontPair, FrogBloodFontPair + 1);
+
+	InitColor(BloodPair, colors.BloodFont.r, colors.BloodFont.g, colors.BloodFont.b);
+	InitColor(BloodPair + 1, colors.BloodBack.r, colors.BloodBack.g, colors.BloodBack.b);
+	InitColorPair(BloodPair, BloodPair, BloodPair + 1);
+
+	InitColor(WindowPair, colors.WindowFont.r, colors.WindowFont.g, colors.WindowFont.b);
+	InitColor(WindowPair + 1, colors.WindowBack.r, colors.WindowBack.g, colors.WindowBack.b);
+	InitColorPair(WindowPair, WindowPair, WindowPair + 1);
+
+	InitColor(BrickPair, colors.BrickFont.r, colors.BrickFont.g, colors.BrickFont.b);
+	InitColor(BrickPair + 1, colors.BrickBack.r, colors.BrickBack.g, colors.BrickBack.b);
+	InitColorPair(BrickPair, BrickPair, BrickPair + 1);
+}
+
+void InitColors3(const ColorsOptions& colors)
+{
+	InitColor(GrassHomePair, colors.GrassHomeFont.r, colors.GrassHomeFont.g, colors.GrassHomeFont.b);
+	InitColor(GrassHomePair + 1, colors.GrassHomeBack.r, colors.GrassHomeBack.g, colors.GrassHomeBack.b);
+	InitColorPair(GrassHomePair, GrassHomePair, GrassHomePair + 1);
+
+	InitColor(BadCarPair, colors.BadCarFont.r, colors.BadCarFont.g, colors.BadCarFont.b);
+	InitColor(BadCarPair + 1, colors.BadCarBack.r, colors.BadCarBack.g, colors.BadCarBack.b);
+	InitColorPair(BadCarPair, BadCarPair, BadCarPair + 1);
+
+	InitColor(FriendlyCarPair, colors.FriendlyCarFont.r, colors.FriendlyCarFont.g, colors.FriendlyCarFont.b);
+	InitColor(FriendlyCarPair + 1, colors.FriendlyCarBack.r, colors.FriendlyCarBack.g, colors.FriendlyCarBack.b);
+	InitColorPair(FriendlyCarPair, FriendlyCarPair, FriendlyCarPair + 1);
+
+	InitColor(StorkPair, colors.StorkFont.r, colors.StorkFont.g, colors.StorkFont.b);
+	InitColor(StorkPair + 1, colors.StorkBack.r, colors.StorkBack.g, colors.StorkBack.b);
+	InitColorPair(StorkPair, StorkPair, StorkPair + 1);
+}
+
+void InitColors4(const ColorsOptions& colors)
+{
+	InitColor(CarLightsPair, colors.CarLightFont.r, colors.CarLightFont.g, colors.CarLightFont.b);
+	InitColor(CarLightsPair + 1, colors.CarLightBack.r, colors.CarLightBack.g, colors.CarLightBack.b);
+	InitColorPair(CarLightsPair, CarLightsPair, CarLightsPair + 1);
+
+	InitColor(BuildingPair, colors.BuildingFont.r, colors.BuildingFont.g, colors.BuildingFont.b);
+	InitColor(BuildingPair + 1, colors.BuildingBack.r, colors.BuildingBack.g, colors.BuildingBack.b);
+	InitColorPair(BuildingPair, BuildingPair, BuildingPair + 1);
+}
+
+
 WINDOW* InitWindow(const ColorsOptions& colors)
 {
 	// curses init
@@ -325,66 +398,9 @@ WINDOW* InitWindow(const ColorsOptions& colors)
 	if (has_colors())
 	{
 		start_color();
-
-		InitColor(GrassPair, colors.GrassFont.r, colors.GrassFont.g, colors.GrassFont.b);
-		InitColor(GrassPair + 1, colors.GrassBack.r, colors.GrassBack.g, colors.GrassBack.b);
-		InitColorPair(GrassPair, GrassPair, GrassPair + 1);
-
-		InitColor(FrogPair, colors.FrogFont.r, colors.FrogFont.g, colors.FrogFont.b);
-		InitColor(FrogPair + 1, colors.FrogBack.r, colors.FrogBack.g, colors.FrogBack.b);
-		InitColorPair(FrogPair, FrogPair, FrogPair + 1);
-
-		InitColor(RoadPair, colors.RoadFont.r, colors.RoadFont.g, colors.RoadFont.b);
-		InitColor(RoadPair + 1, colors.RoadBack.r, colors.RoadBack.g, colors.RoadBack.b);
-		InitColorPair(RoadPair, RoadPair, RoadPair + 1);
-
-		InitColor(HomePair, colors.HomeFont.r, colors.HomeFont.g, colors.HomeFont.b);
-		InitColor(HomePair + 1, colors.HomeBack.r, colors.HomeBack.g, colors.HomeBack.b);
-		InitColorPair(HomePair, HomePair, HomePair + 1);
-
-		InitColor(TaxiPair, colors.TaxiFont.r, colors.TaxiFont.g, colors.TaxiFont.b);
-		InitColor(TaxiPair + 1, colors.TaxiBack.r, colors.TaxiBack.g, colors.TaxiBack.b);
-		InitColorPair(TaxiPair, TaxiPair, TaxiPair + 1);
-
-		InitColor(FrogBloodFontPair, colors.FrogBloodFontFont.r, colors.FrogBloodFontFont.g, colors.FrogBloodFontFont.b);
-		InitColor(FrogBloodFontPair + 1, colors.FrogBloodFontBack.r, colors.FrogBloodFontBack.g, colors.FrogBloodFontBack.b);
-		InitColorPair(FrogBloodFontPair, FrogBloodFontPair, FrogBloodFontPair + 1);
-
-		InitColor(BloodPair, colors.BloodFont.r, colors.BloodFont.g, colors.BloodFont.b);
-		InitColor(BloodPair + 1, colors.BloodBack.r, colors.BloodBack.g, colors.BloodBack.b);
-		InitColorPair(BloodPair, BloodPair, BloodPair + 1);
-
-		InitColor(WindowPair, colors.WindowFont.r, colors.WindowFont.g, colors.WindowFont.b);
-		InitColor(WindowPair + 1, colors.WindowBack.r, colors.WindowBack.g, colors.WindowBack.b);
-		InitColorPair(WindowPair, WindowPair, WindowPair + 1);
-
-		InitColor(BrickPair, colors.BrickFont.r, colors.BrickFont.g, colors.BrickFont.b);
-		InitColor(BrickPair + 1, colors.BrickBack.r, colors.BrickBack.g, colors.BrickBack.b);
-		InitColorPair(BrickPair, BrickPair, BrickPair + 1);
-
-		InitColor(GrassHomePair, colors.GrassHomeFont.r, colors.GrassHomeFont.g, colors.GrassHomeFont.b);
-		InitColor(GrassHomePair + 1, colors.GrassHomeBack.r, colors.GrassHomeBack.g, colors.GrassHomeBack.b);
-		InitColorPair(GrassHomePair, GrassHomePair, GrassHomePair + 1);
-
-		InitColor(BadCarPair, colors.BadCarFont.r, colors.BadCarFont.g, colors.BadCarFont.b);
-		InitColor(BadCarPair + 1, colors.BadCarBack.r, colors.BadCarBack.g, colors.BadCarBack.b);
-		InitColorPair(BadCarPair, BadCarPair, BadCarPair + 1);
-
-		InitColor(FriendlyCarPair, colors.FriendlyCarFont.r, colors.FriendlyCarFont.g, colors.FriendlyCarFont.b);
-		InitColor(FriendlyCarPair + 1, colors.FriendlyCarBack.r, colors.FriendlyCarBack.g, colors.FriendlyCarBack.b);
-		InitColorPair(FriendlyCarPair, FriendlyCarPair, FriendlyCarPair + 1);
-
-		InitColor(StorkPair, colors.StorkFont.r, colors.StorkFont.g, colors.StorkFont.b);
-		InitColor(StorkPair + 1, colors.StorkBack.r, colors.StorkBack.g, colors.StorkBack.b);
-		InitColorPair(StorkPair, StorkPair, StorkPair + 1);
-
-		InitColor(CarLightsPair, colors.CarLightFont.r, colors.CarLightFont.g, colors.CarLightFont.b);
-		InitColor(CarLightsPair + 1, colors.CarLightBack.r, colors.CarLightBack.g, colors.CarLightBack.b);
-		InitColorPair(CarLightsPair, CarLightsPair, CarLightsPair + 1);
-
-		InitColor(BuildingPair, colors.BuildingFont.r, colors.BuildingFont.g, colors.BuildingFont.b);
-		InitColor(BuildingPair + 1, colors.BuildingBack.r, colors.BuildingBack.g, colors.BuildingBack.b);
-		InitColorPair(BuildingPair, BuildingPair, BuildingPair + 1);
+		InitColors1(colors);
+		InitColors2(colors);
+		InitColors3(colors);
 	}
 
 	return win;
@@ -1491,21 +1507,24 @@ GameStateChange MainLoop(const GameState& current, const Options* options, WINDO
 Options* CreateOptions()
 {
 	Options* options = new Options;
+
+	// variables initialization
+
 	options->general.startScreenWidth = 53;
 	options->general.startScreenHeight = 23;
 	options->general.gameOverScreenWidth = 56;
 	options->general.gameOverScreenHeight = 45;
 	options->general.maxTime = 100;
 
-	options->frog.skinOne[0] = 'F';
-	options->frog.skinOne[1] = '\0';
-	options->frog.skinTwo[0] = 'f';
-	options->frog.skinTwo[1] = '\0';
+	options->frog.skinOne = new char[2];
+	strcpy(options->frog.skinOne, "F");
+	options->frog.skinTwo = new char[2];
+	strcpy(options->frog.skinTwo, "f");
 
-	options->home.skin[0] = 'H';
-	options->home.skin[1] = '\0';
+	options->home.skin = new char[2];
+	strcpy(options->home.skin, "H");
 
-	options->car.speedUpFactor = 5.0f;
+	options->car.speedUpFactor = 5;
 	options->car.speedUpChances = 10;
 	options->car.slowDownChances = 10;
 	options->car.returnChances = 10;
@@ -1515,30 +1534,26 @@ Options* CreateOptions()
 	options->car.minSpeed = 5;
 	options->car.maxSpeed = 15;
 
-	options->car.bikeSkin[0] = '#';
-	options->car.bikeSkin[1] = '\0';
+	options->car.bikeSkin = new char[2];
+	strcpy(options->car.bikeSkin, "#");
 
-	options->car.carSkin[0] = '#';
-	options->car.carSkin[1] = '#';
-	options->car.carSkin[2] = '\0';
+	options->car.carSkin = new char[3];
+	strcpy(options->car.carSkin, "##");
 
-	options->car.truckSkin[0] = '#';
-	options->car.truckSkin[1] = '#';
-	options->car.truckSkin[2] = '#';
-	options->car.truckSkin[3] = '\0';
+	options->car.truckSkin = new char[4];
+	strcpy(options->car.truckSkin, "###");
 
 	options->road.roadNumber = 10;
 
 	options->building.buildingsNumber = 10;
-
 	options->building.skin = new char[2];
 	strcpy(options->building.skin, "A");
 
 	options->stork.startX = 0;
 	options->stork.startY = 0;
 	options->stork.speed = 1.0f;
-	options->stork.skin[0] = 'S';
-	options->stork.skin[1] = '\0';
+	options->stork.skin = new char[2];
+	strcpy(options->stork.skin, "S");
 
 	options->board.width = 80;
 
@@ -1547,6 +1562,8 @@ Options* CreateOptions()
 
 	options->files.bestScoresFileName = new char[9];
 	strcpy(options->files.bestScoresFileName, "best.txt");
+
+	// Colors initialization
 
 	options->colors.GrassFont = { 65,152,10 };
 	options->colors.GrassBack = { 65, 152, 10 };
@@ -1612,37 +1629,6 @@ bool StartsWith(const char* str, const char* begin)
 	return true;
 }
 
-// TODO: do usuniecia po przerobieniu odczytu parametrow
-int GetInt(char* str)
-{
-	char* pos = strchr(str, '=');
-	if (pos == NULL)
-	{
-		return 0;
-	}
-
-	int result = atoi(pos + 1);
-	return result;
-}
-
-// TODO: do usuniecia po przerobieniu odczytu parametrow
-char* GetString(char* str)
-{
-	char* pos = strchr(str, '=');
-	if (pos == NULL)
-	{
-		return NULL;
-	}
-
-	size_t len = strlen(pos);
-	if (pos[len-1] == '\n')
-	{
-		pos[len - 1] = '\0';
-	}
-
-	return pos + 1;
-}
-
 void ReadIntOption(char* buffer, const char* name, int& var)
 {
 	if (StartsWith(buffer, name))
@@ -1677,6 +1663,37 @@ void ReadStringOption(char* buffer, const char* name, char*& var)
 	}
 }
 
+void ReadFloatOption(char* buffer, const char* name, float& var)
+{
+	if (StartsWith(buffer, name))
+	{
+		char* pos = strchr(buffer, '=');
+		if (pos != NULL)
+		{
+			var = atof(pos + 1);
+		}
+	}
+}
+
+void ReadBoolOption(char* buffer, const char* name, bool& var)
+{
+	if (StartsWith(buffer, name))
+	{
+		char* pos = strchr(buffer, '=');
+		if (pos != NULL)
+		{
+			if (*(pos + 1) == 'y')
+			{
+				var = true;
+			}
+			else
+			{
+				var = false;
+			}
+		}
+	}
+}
+
 void ReadRgbOption(char* buffer, const char* name, RGB& var)
 {
 	if (StartsWith(buffer, name))
@@ -1700,130 +1717,93 @@ Options* ReadOptions(Options* options)
 		char buffer[bufferSize];
 		while (fgets(buffer, bufferSize - 1, file))
 		{
-			// TODO: paramsy od skrócenia
 			ReadIntOption(buffer, "general.startScreenWidth", options->general.startScreenWidth);
+			ReadIntOption(buffer, "general.startScreenHeight", options->general.startScreenHeight);
+			ReadIntOption(buffer, "general.gameOverScreenWidth", options->general.gameOverScreenWidth);
+			ReadIntOption(buffer, "general.gameOverScreenHeight", options->general.gameOverScreenHeight);
+			ReadIntOption(buffer, "general.maxTime", options->general.maxTime);
 
-			if (StartsWith(buffer, "general.startScreenHeight"))
-			{
-				options->general.startScreenHeight = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "general.gameOverScreenWidth"))
-			{
-				options->general.gameOverScreenWidth = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "general.gameOverScreenHeight"))
-			{
-				options->general.gameOverScreenHeight = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "general.maxTime"))
-			{
-				options->general.maxTime = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "frog.skinOne"))
-			{
-				options->frog.skinOne[0] = GetString(buffer)[0];
-			}
-			else if (StartsWith(buffer, "frog.skinTwo"))
-			{
-				options->frog.skinTwo[0] = GetString(buffer)[0];
-			}
-			else if (StartsWith(buffer, "car.speedUpFactor"))
-			{
-				options->car.speedUpFactor = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "car.speedUpChances"))
-			{
-				options->car.speedUpChances = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "car.slowDownChances"))
-			{
-				options->car.slowDownChances = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "car.returnChances"))
-			{
-				options->car.returnChances = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "car.wrapChances"))
-			{
-				options->car.wrapChances = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "car.breakDistance"))
-			{
-				options->car.breakDistance = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "car.carsNumber"))
-			{
-				options->car.carsNumber = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "road.roadNumber"))
-			{
-				options->road.roadNumber = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "building.buildingsNumber"))
-			{
-				options->building.buildingsNumber = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "stork.startX"))
-			{
-				options->stork.startX = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "stork.startY"))
-			{
-				options->stork.startY = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "stork.speed"))
-			{
-				options->stork.speed = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "board.width"))
-			{
-				options->board.width = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "useSeed"))
-			{
-				options->useSeed = GetString(buffer)[0] == 'y';
-			}
-			else if (StartsWith(buffer, "seed"))
-			{
-				options->seed = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "stork.skin"))
-			{
-				options->stork.skin[0] = GetString(buffer)[0];
-			}
-			else if (StartsWith(buffer, "home.skin"))
-			{
-				options->home.skin[0] = GetString(buffer)[0];
-			}
-			else if (StartsWith(buffer, "car.minSpeed"))
-			{
-				options->car.minSpeed = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "car.maxSpeed"))
-			{
-				options->car.maxSpeed = GetInt(buffer);
-			}
-			else if (StartsWith(buffer, "car.bikeSkin"))
-			{
-				options->car.bikeSkin[0] = GetString(buffer)[0];
-			}
-			else if (StartsWith(buffer, "car.carSkin"))
-			{
-				options->car.carSkin[0] = GetString(buffer)[0];
-				options->car.carSkin[1] = GetString(buffer)[1];
-			}
-			else if (StartsWith(buffer, "car.truckSkin"))
-			{
-				options->car.truckSkin[0] = GetString(buffer)[0];
-				options->car.truckSkin[1] = GetString(buffer)[1];
-				options->car.truckSkin[2] = GetString(buffer)[2];
-			}
+			ReadStringOption(buffer, "frog.skinOne", options->frog.skinOne);
+			ReadStringOption(buffer, "frog.skinTwo", options->frog.skinTwo);
+
+			ReadIntOption(buffer, "car.speedUpFactor", options->car.speedUpFactor);
+			ReadIntOption(buffer, "car.speedUpChances", options->car.speedUpChances);
+			ReadIntOption(buffer, "car.slowDownChances", options->car.slowDownChances);
+			ReadIntOption(buffer, "car.returnChances", options->car.returnChances);
+			ReadIntOption(buffer, "car.wrapChances", options->car.wrapChances);
+			ReadIntOption(buffer, "car.breakDistance", options->car.breakDistance);
+			ReadIntOption(buffer, "car.carsNumber", options->car.carsNumber);
+			ReadIntOption(buffer, "car.minSpeed", options->car.minSpeed);
+			ReadIntOption(buffer, "car.maxSpeed", options->car.maxSpeed);
+			ReadStringOption(buffer, "car.bikeSkin", options->car.bikeSkin);
+			ReadStringOption(buffer, "car.carSkin", options->car.carSkin);
+			ReadStringOption(buffer, "car.truckSkin", options->car.truckSkin);
+
+			ReadIntOption(buffer, "road.roadNumber", options->road.roadNumber);
 
 			ReadStringOption(buffer, "building.skin", options->building.skin);
+			ReadIntOption(buffer, "building.buildingsNumber", options->building.buildingsNumber);
+
+			ReadIntOption(buffer, "stork.startX", options->stork.startX);
+			ReadIntOption(buffer, "stork.startY", options->stork.startY);
+			
+			ReadFloatOption(buffer, "stork.speed", options->stork.speed);
+			ReadStringOption(buffer, "stork.skin", options->stork.skin);
+			
+			ReadIntOption(buffer, "board.width", options->board.width);
+
+			ReadBoolOption(buffer, "useSeed", options->useSeed);
+
+			ReadIntOption(buffer, "seed", options->seed);
+			
+			ReadStringOption(buffer, "home.skin", options->home.skin);
+
 			ReadStringOption(buffer, "files.bestScoresFileName", options->files.bestScoresFileName);
 
-			// TODO: tu dodac odczyt parametrow kolorow
-			ReadRgbOption(buffer, "color.grass.font", options->colors.GrassFont);
+			ReadRgbOption(buffer, "colors.GrassFont", options->colors.GrassFont);
+			ReadRgbOption(buffer, "colors.GrassBack", options->colors.GrassBack);
+
+			ReadRgbOption(buffer, "colors.FrogFont", options->colors.FrogFont);
+			ReadRgbOption(buffer, "colors.FrogBack", options->colors.FrogBack);
+
+			ReadRgbOption(buffer, "colors.RoadFont", options->colors.RoadFont);
+			ReadRgbOption(buffer, "colors.RoadBack", options->colors.RoadBack);
+
+			ReadRgbOption(buffer, "colors.HomeFont", options->colors.HomeFont);
+			ReadRgbOption(buffer, "colors.HomeBack", options->colors.HomeBack);
+
+			ReadRgbOption(buffer, "colors.TaxiFont", options->colors.TaxiFont);
+			ReadRgbOption(buffer, "colors.TaxiBack", options->colors.TaxiBack);
+
+			ReadRgbOption(buffer, "colors.FrogBloodFontFont", options->colors.FrogBloodFontFont);
+			ReadRgbOption(buffer, "colors.FrogBloodFontBack", options->colors.FrogBloodFontBack);
+
+			ReadRgbOption(buffer, "colors.BloodFont", options->colors.BloodFont);
+			ReadRgbOption(buffer, "colors.BloodBack", options->colors.BloodBack);
+
+			ReadRgbOption(buffer, "colors.WindowFont", options->colors.WindowFont);
+			ReadRgbOption(buffer, "colors.WindowBack", options->colors.WindowBack);
+
+			ReadRgbOption(buffer, "colors.BrickFont", options->colors.BrickFont);
+			ReadRgbOption(buffer, "colors.BrickBack", options->colors.BrickBack);
+
+			ReadRgbOption(buffer, "colors.GrassHomeFont", options->colors.GrassHomeFont);
+			ReadRgbOption(buffer, "colors.GrassHomeBack", options->colors.GrassHomeBack);
+
+			ReadRgbOption(buffer, "colors.BadCarFont", options->colors.BadCarFont);
+			ReadRgbOption(buffer, "colors.BadCarBack", options->colors.BadCarBack);
+
+			ReadRgbOption(buffer, "colors.FriendlyCarFont", options->colors.FriendlyCarFont);
+			ReadRgbOption(buffer, "colors.FriendlyCarBack", options->colors.FriendlyCarBack);
+
+			ReadRgbOption(buffer, "colors.StorkFont", options->colors.StorkFont);
+			ReadRgbOption(buffer, "colors.StorkBack", options->colors.StorkBack);
+
+			ReadRgbOption(buffer, "colors.CarLightFont", options->colors.CarLightFont);
+			ReadRgbOption(buffer, "colors.CarLightBack", options->colors.CarLightBack);
+
+			ReadRgbOption(buffer, "colors.BuildingFont", options->colors.BuildingFont);
+			ReadRgbOption(buffer, "colors.BuildingBack", options->colors.BuildingBack);
 		}
 
 		fclose(file);
@@ -1846,14 +1826,6 @@ int main()
 	}
 
 	WINDOW* win = InitWindow(options->colors);
-
-	for (int i = 1; i < 16; i++)
-	{
-		StartPair(i);
-		printw("%d ---------              --------------\n", i);
-		EndPair(i);
-	}
-	wrefresh(win);
 	
 	GameState Start = CreateStart(options);
 	GameState Game = CreateGame(options);
