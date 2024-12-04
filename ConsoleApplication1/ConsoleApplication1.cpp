@@ -387,7 +387,6 @@ void InitColors4(const ColorsOptions& colors)
 	InitColorPair(BuildingPair, BuildingPair, BuildingPair + 1);
 }
 
-
 WINDOW* InitWindow(const ColorsOptions& colors)
 {
 	// curses init
