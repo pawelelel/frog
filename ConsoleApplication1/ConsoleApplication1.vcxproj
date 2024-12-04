@@ -184,6 +184,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="frog.config" />
+    <None Include="Level1.config" />
+    <None Include="Level2.config" />
+    <None Include="Level3.config" />
     <None Include="pdcurses\README.md" />
   </ItemGroup>
   <ItemGroup>

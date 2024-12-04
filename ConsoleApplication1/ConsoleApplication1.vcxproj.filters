@@ -165,6 +165,9 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="frog.config" />
+    <None Include="Level1.config" />
+    <None Include="Level2.config" />
+    <None Include="Level3.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pdcurses\curses.h">

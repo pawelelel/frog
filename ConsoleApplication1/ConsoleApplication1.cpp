@@ -53,7 +53,10 @@ enum GameStateMessage
 	ChangeToStart = 1,
 	ChangeToGame = 2,
 	ChangeToGameOver = 3,
-	ExitProgram = 4
+	ExitProgram = 4,
+	ChangeToLevel1 = 5,
+	ChangeToLevel2 = 6,
+	ChangeToLevel3 = 7,
 };
 
 enum RoadType
@@ -425,6 +428,18 @@ GameStateChange StartKeysHandler(const GameState& self, int key)
 		{
 			return { ChangeToGame, NULL };
 		}
+		case '1':
+		{
+			return { ChangeToLevel1, NULL };
+		}
+		case '2':
+		{
+			return { ChangeToLevel2, NULL };
+		}
+		case '3':
+		{
+			return { ChangeToLevel3, NULL };
+		}
 		default:
 		{
 			return { ChangeNoChange, NULL };
@@ -466,6 +481,9 @@ void StartDraw(const GameState& self, const Options* options, WINDOW* win)
 	DrawStartFrog();
 	printw("\n");
 	printw("               s => start new game                  \n");
+	printw("               1 => Level 1                         \n");
+	printw("               2 => Level 2                         \n");
+	printw("               3 => Level 3                         \n");
 	printw("               q => quit program                    \n");
 	EndPair(FrogPair);
 	wrefresh(win);
@@ -1095,6 +1113,8 @@ void InitStork(Board* board, const Options* options)
 {
 	board->stork = { options->stork.startX, options->stork.startY, 0.0f, options->stork.speed };
 }
+
+//Options* ReadOptions(Options* options, const char* fileName);
 
 void GameInit(GameState& self, const Options* options, void* initData)
 {
@@ -1806,9 +1826,9 @@ void ReadColorsOptions3(char buffer[], Options* options)
 	ReadRgbOption(buffer, "colors.BuildingBack", options->colors.BuildingBack);
 }
 
-Options* ReadOptions(Options* options)
+Options* ReadOptions(Options* options, const char* fileName)
 {
-	FILE* file = fopen("frog.config", "r");
+	FILE* file = fopen(fileName, "r");
 	if (file != NULL)
 	{
 		const int bufferSize = 1024;
@@ -1854,7 +1874,7 @@ Options* ReadOptions(Options* options)
 
 int main()
 {
-	Options* options = ReadOptions(CreateOptions());
+	Options* options = ReadOptions(CreateOptions(), "frog.config");
 
 	if (options->useSeed)
 	{
@@ -1887,6 +1907,16 @@ int main()
 			}
 			case ChangeToGame:
 			{
+				delete options;
+				options = ReadOptions(CreateOptions(), "frog.config");
+				if (options->useSeed)
+				{
+					srand(options->seed);
+				}
+				else
+				{
+					srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
+				}
 				current = Game;
 				break;
 			}
@@ -1900,7 +1930,54 @@ int main()
 				return 0;
 			}
 			case ChangeNoChange:
+			{
 				break;
+			}
+			case ChangeToLevel1:
+			{
+				delete options;
+				options = ReadOptions(CreateOptions(), "Level1.config");
+				if (options->useSeed)
+				{
+					srand(options->seed);
+				}
+				else
+				{
+					srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
+				}
+				current = Game;
+				break;
+			}
+			case ChangeToLevel2:
+			{
+				delete options;
+				options = ReadOptions(CreateOptions(), "Level2.config");
+				if (options->useSeed)
+				{
+					srand(options->seed);
+				}
+				else
+				{
+					srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
+				}
+				current = Game;
+				break;
+			}
+			case ChangeToLevel3:
+			{
+				delete options;
+				options = ReadOptions(CreateOptions(), "Level3.config");
+				if (options->useSeed)
+				{
+					srand(options->seed);
+				}
+				else
+				{
+					srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
+				}
+				current = Game;
+				break;
+			}
 		}
 		current.init(current, options, change.data);
 	}
@@ -1938,3 +2015,11 @@ struct Game
 };
 
 */
+
+
+/*
+ *change to game level
+ *Level(nr_gry+1).config
+ *w petli az do konca
+ *w rysowaniu gry nr_gry
+ */
