@@ -437,7 +437,7 @@ GameStateChange StartKeysHandler(const GameState& self, int key)
 			ChangeLevelData* data = new ChangeLevelData{ 0 };
 			return { ChangeToGame, data };
 		}
-		case '1':
+		case 'l':
 		{
 			ChangeLevelData* data = new ChangeLevelData{ 1 };
 			return { ChangeToLevel, data };
@@ -483,7 +483,7 @@ void StartDraw(const GameState& self, const Options* options, WINDOW* win)
 	DrawStartFrog();
 	printw("\n");
 	printw("               s => start new game                  \n");
-	printw("               1 => start level 1                   \n");
+	printw("               l => start level 1                   \n");
 	printw("               q => quit program                    \n");
 	EndPair(FrogPair);
 	wrefresh(win);
@@ -1872,12 +1872,8 @@ Options* ReadOptions(Options* options, const char* fileName)
 	return options;
 }
 
-// main
-
-int main()
+void InitSRand(Options* options)
 {
-	Options* options = ReadOptions(CreateOptions(), "frog.config");
-
 	if (options->useSeed)
 	{
 		srand(options->seed);
@@ -1886,6 +1882,59 @@ int main()
 	{
 		srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
 	}
+}
+
+// main
+
+bool NextLevel(Options*& options, GameState Game, GameState GameOver, GameState& current, GameStateChange& change, GameOverMessageData* message)
+{
+	int levelInt = message->levelId;
+	if (levelInt == 0)
+	{
+		current = GameOver;
+	}
+	else
+	{
+		char fileName[30];
+		sprintf(fileName, "Level%d.config", levelInt+1);
+
+		if (access(fileName, 0) != 0)
+		{
+			current = GameOver;
+			return true;
+		}
+
+		delete options;
+		options = ReadOptions(CreateOptions(), fileName);
+		InitSRand(options);
+
+		ChangeLevelData* level = new ChangeLevelData;
+		level->score = message->score;
+		level->levelId = levelInt+1;
+		change.data = level;
+
+		current = Game;
+	}
+	return false;
+}
+
+void ChangeToLevel1(Options*& options, GameState Game, GameState& current, GameStateChange change)
+{
+	ChangeLevelData* level = (ChangeLevelData*)change.data;
+	int levelInt = level->levelId;
+	char fileName[30];
+	sprintf(fileName, "Level%d.config", levelInt);
+	delete options;
+	options = ReadOptions(CreateOptions(), fileName);
+	InitSRand(options);
+	current = Game;
+}
+
+int main()
+{
+	Options* options = ReadOptions(CreateOptions(), "frog.config");
+
+	InitSRand(options);
 
 	WINDOW* win = InitWindow(options->colors);
 	
@@ -1911,14 +1960,7 @@ int main()
 			{
 				delete options;
 				options = ReadOptions(CreateOptions(), "frog.config");
-				if (options->useSeed)
-				{
-					srand(options->seed);
-				}
-				else
-				{
-					srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
-				}
+				InitSRand(options);
 				current = Game;
 				break;
 			}
@@ -1928,40 +1970,7 @@ int main()
 				
 				if (message->won)
 				{
-					int levelInt = message->levelId;
-					if (levelInt == 0)
-					{
-						current = GameOver;
-					}
-					else
-					{
-						char fileName[30];
-						sprintf(fileName, "Level%d.config", levelInt+1);
-
-						if (access(fileName, 0) != 0)
-						{
-							current = GameOver;
-							break;
-						}
-
-						delete options;
-						options = ReadOptions(CreateOptions(), fileName);
-						if (options->useSeed)
-						{
-							srand(options->seed);
-						}
-						else
-						{
-							srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
-						}
-
-						ChangeLevelData* level = new ChangeLevelData;
-						level->score = message->score;
-						level->levelId = levelInt+1;
-						change.data = level;
-
-						current = Game;
-					}
+					if (NextLevel(options, Game, GameOver, current, change, message)) break;
 				}
 				else
 				{
@@ -1979,21 +1988,7 @@ int main()
 			}
 			case ChangeToLevel:
 			{
-				ChangeLevelData* level = (ChangeLevelData*)change.data;
-				int levelInt = level->levelId;
-				char fileName[30];
-				sprintf(fileName, "Level%d.config", levelInt);
-				delete options;
-				options = ReadOptions(CreateOptions(), fileName);
-				if (options->useSeed)
-				{
-					srand(options->seed);
-				}
-				else
-				{
-					srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
-				}
-				current = Game;
+				ChangeToLevel1(options, Game, current, change);
 				break;
 			}
 		}
