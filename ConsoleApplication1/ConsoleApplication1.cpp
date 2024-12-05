@@ -55,6 +55,7 @@ enum GameStateMessage
 	ChangeToGameOver = 3,
 	ExitProgram = 4,
 	ChangeToLevel = 5,
+	ChangeToRecord = 6,
 };
 
 enum RoadType
@@ -175,6 +176,7 @@ struct GeneralOptions
 struct FilesOptions
 {
 	char* bestScoresFileName;
+	char* self;
 };
 
 struct Options
@@ -212,6 +214,7 @@ struct GameState
 
 	Options* options;
 	void* data;
+	bool recordable;
 };
 
 struct Player
@@ -298,6 +301,21 @@ struct ChangeLevelData
 {
 	int levelId;
 	int score;
+};
+
+struct Event
+{
+	int time;
+	char eventType; // k => key; t => timer
+	int key; // is used only if eventType=='k'
+};
+
+struct Recorder
+{
+	char* optionsName;
+	int seed;
+	Event* events;
+	int eventsCount;
 };
 
 // Window
@@ -442,6 +460,10 @@ GameStateChange StartKeysHandler(const GameState& self, int key)
 			ChangeLevelData* data = new ChangeLevelData{ 1 };
 			return { ChangeToLevel, data };
 		}
+		case 'r':
+		{
+			return {ChangeToRecord, NULL};
+		}
 		default:
 		{
 			return { ChangeNoChange, NULL };
@@ -484,6 +506,7 @@ void StartDraw(const GameState& self, const Options* options, WINDOW* win)
 	printw("\n");
 	printw("               s => start new game                  \n");
 	printw("               l => start level 1                   \n");
+	printw("               r => run last game                   \n");
 	printw("               q => quit program                    \n");
 	EndPair(FrogPair);
 	wrefresh(win);
@@ -1485,30 +1508,112 @@ int ReadKeys()
 	return NULL;
 }
 
+Recorder* LoadRec()
+{
+	FILE* file = fopen("rec.txt", "r");
+	if (file == NULL)
+	{
+		return NULL;
+	}
+
+	Recorder* rec = new Recorder;
+
+	fscanf(file, "%d\n", &rec->seed);
+	fscanf(file, "%s\n", rec->optionsName);
+	fscanf(file, "%d\n", &rec->eventsCount);
+
+	for (int i = 0; i < rec->eventsCount; ++i)
+	{
+		fscanf(file, "%d: %c, %c\n", &rec->events[i].time, &rec->events[i].eventType, &rec->events[i].key);
+	}
+
+	fclose(file);
+
+	return rec;
+}
+
+void SaveRec(Recorder* rec)
+{
+	FILE* file = fopen("rec.txt", "w");
+	if (file == NULL)
+	{
+		return;
+	}
+
+	fprintf(file, "%d\n", rec->seed);
+	fprintf(file, "%s\n", rec->optionsName);
+	fprintf(file, "%d\n", rec->eventsCount);
+	for (int i = 0; i < rec->eventsCount; ++i)
+	{
+		fprintf(file, "%d: %c, %c\n", rec->events[i].time, rec->events[i].eventType, rec->events[i].key);
+	}
+
+	fclose(file);
+}
+
 GameStateChange MainLoop(const GameState& current, const Options* options, WINDOW* win)
 {
 	clock_t startTime = clock();
+	clock_t lastTimerEvent = 0;
+
+	Recorder* rec = NULL;
+
+	if (current.recordable)
+	{
+		rec = new Recorder;
+		rec->seed = options->seed;
+		rec->optionsName = options->files.self;
+		rec->events = new Event[options->general.maxTime * 10 * 2];
+		rec->eventsCount = 0;
+	}
+
 	while (true)
 	{
 		GameStateChange change;
+		clock_t now = clock();
+		int time = (now - startTime) * 1000 / CLOCKS_PER_SEC;
 
 		int key = ReadKeys();
 		if (key != NULL)
 		{
+			if (current.recordable)
+			{
+				rec->events[rec->eventsCount++] = { time, 'k', key };
+			}
+
 			change = current.keysHandler(current, key);
 			if (change.message != ChangeNoChange)
 			{
+				if (current.recordable)
+				{
+					SaveRec(rec);
+					delete rec->events;
+					delete rec;
+				}
+
 				return change;
 			}
 		}
 
-		clock_t now = clock();
-		int time = (now - startTime) * 1000 / CLOCKS_PER_SEC;
-		if (time >= 100)
+		int delta = time - lastTimerEvent;
+		if (delta > 100)
 		{
+			if (current.recordable)
+			{
+				rec->events[rec->eventsCount++] = { time, 't', ' ' };
+			}
+
+			lastTimerEvent = time;
 			change = current.timerHandler(current, options, time);
 			if (change.message != ChangeNoChange)
 			{
+				if (current.recordable)
+				{
+					SaveRec(rec);
+					delete rec->events;
+					delete rec;
+				}
+
 				return change;
 			}
 		}
@@ -1576,6 +1681,9 @@ void VariablesInitialization(Options* options)
 
 	options->files.bestScoresFileName = new char[9];
 	strcpy(options->files.bestScoresFileName, "best.txt");
+
+	options->files.self = new char[20];
+	strcpy(options->files.self, "");
 }
 
 void FrogRelatedColorsInitializationAndGrass(Options* options)
@@ -1852,6 +1960,7 @@ Options* ReadOptions(Options* options, const char* fileName)
 			ReadStringOption(buffer, "home.skin", options->home.skin);
 
 			ReadStringOption(buffer, "files.bestScoresFileName", options->files.bestScoresFileName);
+			ReadStringOption(buffer, "files.self", options->files.self);
 
 			ReadColorsOptions1(buffer, options);
 			ReadColorsOptions2(buffer, options);
@@ -1932,7 +2041,7 @@ int main()
 	WINDOW* win = InitWindow(options->colors);
 
 	// TODO: pozostale funkcje zrobic tak samo
-	GameState start = { &StartInit, &StartKeysHandler, &StartTimerHandler, &StartDraw, &StartDone, options, NULL };
+	GameState start = { &StartInit, &StartKeysHandler, &StartTimerHandler, &StartDraw, &StartDone, options, NULL, true };
 	GameState game = CreateGame(options);
 	GameState gameOver = CreateGameOver(options);
 
@@ -1985,11 +2094,11 @@ int main()
 				current = game;
 				break;
 			}
+			case ChangeToRecord:
+			{
+				break;
+			}
 		}
 		current.init(current, options, change.data);
 	}
 }
-
-// przy delete zrzutowac wskaznik przed delete
-// wszystkie parametry umieœciæ w pliku
-// sprawdzic tabele wynikow; powinna pobierac best scores z levels best.txt
