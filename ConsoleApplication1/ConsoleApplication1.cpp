@@ -501,19 +501,6 @@ void StartInit(GameState& init, const Options* options, void* initData)
 	Resize(init.options->general.startScreenWidth, init.options->general.startScreenHeight);
 }
 
-GameState CreateStart(Options* options)
-{
-	GameState start;
-	start.options = options;
-	start.init = &StartInit;
-	start.keysHandler = &StartKeysHandler;
-	start.timerHandler = &StartTimerHandler;
-	start.draw = &StartDraw;
-	start.done = &StartDone;
-	start.data = NULL;
-	return start;
-}
-
 // Game
 
 bool IsFrogInHome(const Frog& frog, const Home& home)
@@ -629,6 +616,7 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 
 bool IsFrogHitted(const Frog& f, const Car& c)
 {
+	// TODO: czy dla szybkich samochodow, nie zdazy sie tak, ze przeskoczy on nad zaba
 	if (c.type == Bad && !f.onCar && f.x == (int)round(c.x) && f.y == c.roadNumber)
 	{
 		return true;
@@ -753,6 +741,7 @@ void WrapRight(Car& c, Board* b, const Options* options)
 
 GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 {
+	// TODO: zrobic tak, zeby samochody zatrzymywaly sie przed poprzednim
 	for (int i = 0; i < b->carsNumber; ++i)
 	{
 		Car& c = b->cars[i];
@@ -1515,10 +1504,13 @@ GameStateChange MainLoop(const GameState& current, const Options* options, WINDO
 
 		clock_t now = clock();
 		int time = (now - startTime) * 1000 / CLOCKS_PER_SEC;
-		change = current.timerHandler(current, options, time);
-		if (change.message != ChangeNoChange)
+		if (time >= 100)
 		{
-			return change;
+			change = current.timerHandler(current, options, time);
+			if (change.message != ChangeNoChange)
+			{
+				return change;
+			}
 		}
 
 		current.draw(current, options, win);
@@ -1938,12 +1930,13 @@ int main()
 	InitSRand(options);
 
 	WINDOW* win = InitWindow(options->colors);
-	
-	GameState Start = CreateStart(options);
-	GameState Game = CreateGame(options);
-	GameState GameOver = CreateGameOver(options);
 
-	GameState current = Start;
+	// TODO: pozostale funkcje zrobic tak samo
+	GameState start = { &StartInit, &StartKeysHandler, &StartTimerHandler, &StartDraw, &StartDone, options, NULL };
+	GameState game = CreateGame(options);
+	GameState gameOver = CreateGameOver(options);
+
+	GameState current = start;
 	current.init(current, options, NULL);
 	
 	while (true)
@@ -1954,7 +1947,7 @@ int main()
 		{
 			case ChangeToStart:
 			{
-				current = Start;
+				current = start;
 				break;
 			}
 			case ChangeToGame:
@@ -1962,7 +1955,7 @@ int main()
 				delete options;
 				options = ReadOptions(CreateOptions(), "frog.config");
 				InitSRand(options);
-				current = Game;
+				current = game;
 				break;
 			}
 			case ChangeToGameOver:
@@ -1975,7 +1968,7 @@ int main()
 					break;
 				}
 
-				current = GameOver;
+				current = gameOver;
 				break;
 			}
 			case ExitProgram:
@@ -1989,7 +1982,7 @@ int main()
 			case ChangeToLevel:
 			{
 				ChangeToLevel1(options, change);
-				current = Game;
+				current = game;
 				break;
 			}
 		}
