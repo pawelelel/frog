@@ -1155,19 +1155,6 @@ void GameInit(GameState& self, const Options* options, void* initData)
 	self.data = board;
 }
 
-GameState CreateGame(Options* options)
-{
-	GameState game;
-	game.options = options;
-	game.init = &GameInit;
-	game.keysHandler = &GameKeysHandler;
-	game.timerHandler = &GameTimerHandler;
-	game.draw = &GameDraw;
-	game.done = &GameDone;
-	game.data = NULL;
-	return game;
-}
-
 // Game over
 
 GameStateChange GameOverKeysHandler(const GameState& self, int key)
@@ -1481,19 +1468,6 @@ void GameOverInit(GameState& self, const Options* options, void* initData)
 	InsertYou(data);
 
 	Resize(options->general.gameOverScreenWidth, options->general.gameOverScreenHeight);
-}
-
-GameState CreateGameOver(Options* options)
-{
-	GameState gameOver;
-	gameOver.options = options;
-	gameOver.init = &GameOverInit;
-	gameOver.keysHandler = &GameOverKeysHandler;
-	gameOver.timerHandler = &GameOverTimerHandler;
-	gameOver.draw = &GameOverDraw;
-	gameOver.done = &GameOverDone;
-	gameOver.data = NULL;
-	return gameOver;
 }
 
 // read options
@@ -2042,8 +2016,8 @@ int main()
 
 	// TODO: pozostale funkcje zrobic tak samo
 	GameState start = { &StartInit, &StartKeysHandler, &StartTimerHandler, &StartDraw, &StartDone, options, NULL, true };
-	GameState game = CreateGame(options);
-	GameState gameOver = CreateGameOver(options);
+	GameState game = { &GameInit, &GameKeysHandler, &GameTimerHandler, &GameDraw, &GameDone, options, NULL, false };
+	GameState gameOver = { &GameOverInit, &GameOverKeysHandler, &GameOverTimerHandler, &GameOverDraw, &GameOverDone, options, NULL, false };
 
 	GameState current = start;
 	current.init(current, options, NULL);
