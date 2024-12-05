@@ -1886,48 +1886,49 @@ void InitSRand(Options* options)
 
 // main
 
-bool NextLevel(Options*& options, GameState Game, GameState GameOver, GameState& current, GameStateChange& change, GameOverMessageData* message)
+bool NextLevelExists(GameOverMessageData* message)
 {
 	int levelInt = message->levelId;
 	if (levelInt == 0)
 	{
-		current = GameOver;
+		return false;
 	}
-	else
-	{
-		char fileName[30];
-		sprintf(fileName, "Level%d.config", levelInt+1);
 
-		if (access(fileName, 0) != 0)
-		{
-			current = GameOver;
-			return true;
-		}
+	char fileName[30];
+	sprintf(fileName, "Level%d.config", levelInt+1);
 
-		delete options;
-		options = ReadOptions(CreateOptions(), fileName);
-		InitSRand(options);
-
-		ChangeLevelData* level = new ChangeLevelData;
-		level->score = message->score;
-		level->levelId = levelInt+1;
-		change.data = level;
-
-		current = Game;
-	}
-	return false;
+	int result = access(fileName, 0);
+	return result == 0;
 }
 
-void ChangeToLevel1(Options*& options, GameState Game, GameState& current, GameStateChange change)
+void NextLevelCreate(Options*& options, GameStateChange& change, GameOverMessageData* message)
 {
-	ChangeLevelData* level = (ChangeLevelData*)change.data;
-	int levelInt = level->levelId;
+	int levelInt = message->levelId;
+
 	char fileName[30];
-	sprintf(fileName, "Level%d.config", levelInt);
+	sprintf(fileName, "Level%d.config", levelInt + 1);
+
 	delete options;
 	options = ReadOptions(CreateOptions(), fileName);
 	InitSRand(options);
-	current = Game;
+
+	ChangeLevelData* level = new ChangeLevelData;
+	level->score = message->score;
+	level->levelId = levelInt + 1;
+	change.data = level;
+}
+
+void ChangeToLevel1(Options*& options, GameStateChange change)
+{
+	ChangeLevelData* level = (ChangeLevelData*)change.data;
+	int levelInt = level->levelId;
+
+	char fileName[30];
+	sprintf(fileName, "Level%d.config", levelInt);
+
+	delete options;
+	options = ReadOptions(CreateOptions(), fileName);
+	InitSRand(options);
 }
 
 int main()
@@ -1968,14 +1969,13 @@ int main()
 			{
 				GameOverMessageData* message = (GameOverMessageData*)change.data;
 				
-				if (message->won)
+				if (message->won && NextLevelExists(message))
 				{
-					if (NextLevel(options, Game, GameOver, current, change, message)) break;
+					NextLevelCreate(options, change, message);
+					break;
 				}
-				else
-				{
-					current = GameOver;
-				}
+
+				current = GameOver;
 				break;
 			}
 			case ExitProgram:
@@ -1988,7 +1988,8 @@ int main()
 			}
 			case ChangeToLevel:
 			{
-				ChangeToLevel1(options, Game, current, change);
+				ChangeToLevel1(options, change);
+				current = Game;
 				break;
 			}
 		}
@@ -1998,3 +1999,4 @@ int main()
 
 // przy delete zrzutowac wskaznik przed delete
 // wszystkie parametry umieœciæ w pliku
+// sprawdzic tabele wynikow; powinna pobierac best scores z levels best.txt
