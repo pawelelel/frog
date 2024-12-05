@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+#include <io.h>
 // enums
 
 enum ColorPairs
@@ -54,9 +54,7 @@ enum GameStateMessage
 	ChangeToGame = 2,
 	ChangeToGameOver = 3,
 	ExitProgram = 4,
-	ChangeToLevel1 = 5,
-	ChangeToLevel2 = 6,
-	ChangeToLevel3 = 7,
+	ChangeToLevel = 5,
 };
 
 enum RoadType
@@ -226,6 +224,9 @@ struct GameOverMessageData
 {
 	bool won;
 	int score;
+
+	int levelId;
+
 	Player players[5];
 
 	// for keyboard input
@@ -290,6 +291,13 @@ struct Board
 	Building* buildings;
 	int buildingsNumber;
 	Stork stork;
+	int levelId;
+};
+
+struct ChangeLevelData
+{
+	int levelId;
+	int score;
 };
 
 // Window
@@ -426,19 +434,13 @@ GameStateChange StartKeysHandler(const GameState& self, int key)
 		}
 		case 's':
 		{
-			return { ChangeToGame, NULL };
+			ChangeLevelData* data = new ChangeLevelData{ 0 };
+			return { ChangeToGame, data };
 		}
 		case '1':
 		{
-			return { ChangeToLevel1, NULL };
-		}
-		case '2':
-		{
-			return { ChangeToLevel2, NULL };
-		}
-		case '3':
-		{
-			return { ChangeToLevel3, NULL };
+			ChangeLevelData* data = new ChangeLevelData{ 1 };
+			return { ChangeToLevel, data };
 		}
 		default:
 		{
@@ -481,9 +483,7 @@ void StartDraw(const GameState& self, const Options* options, WINDOW* win)
 	DrawStartFrog();
 	printw("\n");
 	printw("               s => start new game                  \n");
-	printw("               1 => Level 1                         \n");
-	printw("               2 => Level 2                         \n");
-	printw("               3 => Level 3                         \n");
+	printw("               1 => start level 1                   \n");
 	printw("               q => quit program                    \n");
 	EndPair(FrogPair);
 	wrefresh(win);
@@ -621,7 +621,7 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 	if (jump && IsFrogInHome(board->frog, board->home))
 	{
 		board->score += board->maxTime - board->time / 1000;
-		GameOverMessageData* data = new GameOverMessageData{ true, board->score };
+		GameOverMessageData* data = new GameOverMessageData{ true, board->score, board->levelId };
 		return { ChangeToGameOver, data };
 	}
 	return { ChangeNoChange, NULL };
@@ -843,7 +843,7 @@ GameStateChange GameTimerHandler(const GameState& self, const Options* options, 
 {
 	Board* b = (Board*)self.data;
 	b->frog.skin = time / 1000 % 2;
-
+	
 	if (b->frog.onCar)
 	{
 		b->frog.x = (int)round(b->frog.car->x);
@@ -991,7 +991,7 @@ void GameDraw(const GameState& self, const Options* options, WINDOW*win)
 
 	// upper status area containing inforamtion about time and score
 	const int upperStatusAreaSize = 1;
-	printw("Time left: %ds    Score: %d\n", board->maxTime - board->time/1000, board->score);
+	printw("Time left: %ds  Score: %d  Level: %d\n", board->maxTime - board->time/1000, board->score, board->levelId);
 	
 	// roads
 	for (int i = 0; i < board->roadsNumber; ++i)
@@ -1104,7 +1104,6 @@ void InitOtherVariables(Board* board, const Options* options)
 {
 	int homeY = rand() % board->width;
 	board->home = { homeY, 0 };
-	board->score = 0;
 	board->time = 0;
 	board->maxTime = options->general.maxTime;
 }
@@ -1114,11 +1113,14 @@ void InitStork(Board* board, const Options* options)
 	board->stork = { options->stork.startX, options->stork.startY, 0.0f, options->stork.speed };
 }
 
-//Options* ReadOptions(Options* options, const char* fileName);
-
 void GameInit(GameState& self, const Options* options, void* initData)
 {
 	Board* board = new Board;
+
+	ChangeLevelData* level = (ChangeLevelData*)initData;
+	board->levelId = level->levelId;
+	board->score = level->score;
+	
 	board->width = options->board.width;
 
 	InitRoads(board, options);
@@ -1922,7 +1924,49 @@ int main()
 			}
 			case ChangeToGameOver:
 			{
-				current = GameOver;
+				GameOverMessageData* message = (GameOverMessageData*)change.data;
+				
+				if (message->won)
+				{
+					int levelInt = message->levelId;
+					if (levelInt == 0)
+					{
+						current = GameOver;
+					}
+					else
+					{
+						char fileName[30];
+						sprintf(fileName, "Level%d.config", levelInt+1);
+
+						if (access(fileName, 0) != 0)
+						{
+							current = GameOver;
+							break;
+						}
+
+						delete options;
+						options = ReadOptions(CreateOptions(), fileName);
+						if (options->useSeed)
+						{
+							srand(options->seed);
+						}
+						else
+						{
+							srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
+						}
+
+						ChangeLevelData* level = new ChangeLevelData;
+						level->score = message->score;
+						level->levelId = levelInt+1;
+						change.data = level;
+
+						current = Game;
+					}
+				}
+				else
+				{
+					current = GameOver;
+				}
 				break;
 			}
 			case ExitProgram:
@@ -1933,40 +1977,14 @@ int main()
 			{
 				break;
 			}
-			case ChangeToLevel1:
+			case ChangeToLevel:
 			{
+				ChangeLevelData* level = (ChangeLevelData*)change.data;
+				int levelInt = level->levelId;
+				char fileName[30];
+				sprintf(fileName, "Level%d.config", levelInt);
 				delete options;
-				options = ReadOptions(CreateOptions(), "Level1.config");
-				if (options->useSeed)
-				{
-					srand(options->seed);
-				}
-				else
-				{
-					srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
-				}
-				current = Game;
-				break;
-			}
-			case ChangeToLevel2:
-			{
-				delete options;
-				options = ReadOptions(CreateOptions(), "Level2.config");
-				if (options->useSeed)
-				{
-					srand(options->seed);
-				}
-				else
-				{
-					srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
-				}
-				current = Game;
-				break;
-			}
-			case ChangeToLevel3:
-			{
-				delete options;
-				options = ReadOptions(CreateOptions(), "Level3.config");
+				options = ReadOptions(CreateOptions(), fileName);
 				if (options->useSeed)
 				{
 					srand(options->seed);
@@ -1985,41 +2003,3 @@ int main()
 
 // przy delete zrzutowac wskaznik przed delete
 // wszystkie parametry umieœciæ w pliku
-// przerobic stork na liste
-
-/*
-levels ideas
-
-struct Level
-{
-	int levelNo;
-	int numberOfCars;
-	int numberOfStorks;
-	int boardHeight;
-	int numberOfRoads;
-	int minCarSpeed, maxCarSpeed;
-	int storkSpeed;
-};
-
-struct Game
-{
-	Level* levels;
-	int increaseOfCars; // +2
-	int maxCars; // 60
-	int increaseOfStorks; // +1
-	int maxStorks; // 10
-	int increaseOfBoardHeight; // +1
-	int maxBoardHeight; // 30
-	int increaseOfRoads; // +1
-	int increaseOfSpeed; // +10%
-};
-
-*/
-
-
-/*
- *change to game level
- *Level(nr_gry+1).config
- *w petli az do konca
- *w rysowaniu gry nr_gry
- */
