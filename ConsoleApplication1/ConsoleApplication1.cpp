@@ -55,7 +55,7 @@ enum GameStateMessage
 	ChangeToGameOver = 3,
 	ExitProgram = 4,
 	ChangeToLevel = 5,
-	ChangeToRecord = 6,
+	ChangeToReplay = 6,
 };
 
 enum RoadType
@@ -462,7 +462,8 @@ GameStateChange StartKeysHandler(const GameState& self, int key)
 		}
 		case 'r':
 		{
-			return {ChangeToRecord, NULL};
+			ChangeLevelData* data = new ChangeLevelData{ 0 };
+			return {ChangeToReplay, data};
 		}
 		default:
 		{
@@ -1493,12 +1494,21 @@ Recorder* LoadRec()
 	Recorder* rec = new Recorder;
 
 	fscanf(file, "%d\n", &rec->seed);
-	fscanf(file, "%s\n", rec->optionsName);
+
+	rec->optionsName = new char[21];
+	fgets(rec->optionsName, 20, file);
+	int len = strlen(rec->optionsName);
+	if (rec->optionsName[len - 1] == '\n')
+	{
+		rec->optionsName[len - 1] = '\0';
+	}
+
 	fscanf(file, "%d\n", &rec->eventsCount);
+	rec->events = new Event[rec->eventsCount];
 
 	for (int i = 0; i < rec->eventsCount; ++i)
 	{
-		fscanf(file, "%d: %c, %c\n", &rec->events[i].time, &rec->events[i].eventType, &rec->events[i].key);
+		fscanf(file, "%d: %c %d\n", &rec->events[i].time, &rec->events[i].eventType, &rec->events[i].key);
 	}
 
 	fclose(file);
@@ -1519,13 +1529,54 @@ void SaveRec(Recorder* rec)
 	fprintf(file, "%d\n", rec->eventsCount);
 	for (int i = 0; i < rec->eventsCount; ++i)
 	{
-		fprintf(file, "%d: %c, %c\n", rec->events[i].time, rec->events[i].eventType, rec->events[i].key);
+		fprintf(file, "%d: %c %d\n", rec->events[i].time, rec->events[i].eventType, rec->events[i].key);
 	}
 
 	fclose(file);
 }
 
-GameStateChange MainLoop(const GameState& current, const Options* options, WINDOW* win)
+GameStateChange MainLoopPlayer(const GameState& current, const Options* options, Recorder* rec, WINDOW* win)
+{
+	int currentEventNo = 0;
+	clock_t startTime = clock();
+
+	while (true)
+	{
+		GameStateChange change;
+		clock_t now = clock();
+		int time = (now - startTime) * 1000 / CLOCKS_PER_SEC;
+
+		Event currentEvent = rec->events[currentEventNo];
+		if (time < currentEvent.time)
+		{
+			continue;
+		}
+
+		if (currentEvent.eventType == 'k')
+		{
+			change = current.keysHandler(current, currentEvent.key);
+			if (change.message != ChangeNoChange)
+			{
+				return change;
+			}
+		}
+
+		if (currentEvent.eventType == 't')
+		{
+			change = current.timerHandler(current, options, currentEvent.time);
+			if (change.message != ChangeNoChange)
+			{
+				return change;
+			}
+		}
+
+		current.draw(current, options, win);
+
+		currentEventNo++;
+	}
+}
+
+GameStateChange MainLoopRecordable(const GameState& current, const Options* options, WINDOW* win)
 {
 	clock_t startTime = clock();
 	clock_t lastTimerEvent = 0;
@@ -1558,7 +1609,7 @@ GameStateChange MainLoop(const GameState& current, const Options* options, WINDO
 			change = current.keysHandler(current, key);
 			if (change.message != ChangeNoChange)
 			{
-				if (current.recordable)
+				if (change.message == ChangeToGameOver && current.recordable)
 				{
 					SaveRec(rec);
 					delete rec->events;
@@ -1574,14 +1625,14 @@ GameStateChange MainLoop(const GameState& current, const Options* options, WINDO
 		{
 			if (current.recordable)
 			{
-				rec->events[rec->eventsCount++] = { time, 't', ' ' };
+				rec->events[rec->eventsCount++] = { time, 't', 0 };
 			}
 
 			lastTimerEvent = time;
 			change = current.timerHandler(current, options, time);
 			if (change.message != ChangeNoChange)
 			{
-				if (current.recordable)
+				if (change.message == ChangeToGameOver && current.recordable)
 				{
 					SaveRec(rec);
 					delete rec->events;
@@ -1593,6 +1644,18 @@ GameStateChange MainLoop(const GameState& current, const Options* options, WINDO
 		}
 
 		current.draw(current, options, win);
+	}
+}
+
+GameStateChange MainLoop(const GameState& current, const Options* options, Recorder* rec, WINDOW* win)
+{
+	if (rec == NULL)
+	{
+		return MainLoopRecordable(current, options, win);
+	}
+	else
+	{
+		return MainLoopPlayer(current, options, rec, win);
 	}
 }
 
@@ -1947,16 +2010,12 @@ Options* ReadOptions(Options* options, const char* fileName)
 	return options;
 }
 
-void InitSRand(Options* options)
+int InitSRand(Options* options)
 {
-	if (options->useSeed)
-	{
-		srand(options->seed);
-	}
-	else
-	{
-		srand(time(NULL)); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
-	}
+	int seed = options->useSeed ? options->seed : time(NULL);
+	srand(seed); // NOLINT(cert-msc51-cpp, clang-diagnostic-shorten-64-to-32)
+
+	return seed;
 }
 
 // main
@@ -1985,7 +2044,7 @@ void NextLevelCreate(Options*& options, GameStateChange& change, GameOverMessage
 
 	delete options;
 	options = ReadOptions(CreateOptions(), fileName);
-	InitSRand(options);
+	options->seed = InitSRand(options);
 
 	ChangeLevelData* level = new ChangeLevelData;
 	level->score = message->score;
@@ -2003,28 +2062,34 @@ void ChangeToLevel1(Options*& options, GameStateChange change)
 
 	delete options;
 	options = ReadOptions(CreateOptions(), fileName);
-	InitSRand(options);
+	options->seed = InitSRand(options);
 }
 
 int main()
 {
 	Options* options = ReadOptions(CreateOptions(), "frog.config");
 
-	InitSRand(options);
+	options->seed = InitSRand(options);
 
 	WINDOW* win = InitWindow(options->colors);
-
-	// TODO: pozostale funkcje zrobic tak samo
-	GameState start = { &StartInit, &StartKeysHandler, &StartTimerHandler, &StartDraw, &StartDone, options, NULL, true };
-	GameState game = { &GameInit, &GameKeysHandler, &GameTimerHandler, &GameDraw, &GameDone, options, NULL, false };
+	GameState start = { &StartInit, &StartKeysHandler, &StartTimerHandler, &StartDraw, &StartDone, options, NULL, false };
+	GameState game = { &GameInit, &GameKeysHandler, &GameTimerHandler, &GameDraw, &GameDone, options, NULL, true };
 	GameState gameOver = { &GameOverInit, &GameOverKeysHandler, &GameOverTimerHandler, &GameOverDraw, &GameOverDone, options, NULL, false };
+
+	Recorder* rec = NULL;
 
 	GameState current = start;
 	current.init(current, options, NULL);
 	
 	while (true)
 	{
-		GameStateChange change = MainLoop(current, options, win);
+		GameStateChange change = MainLoop(current, options, rec, win);
+		if (rec != NULL)
+		{
+			delete rec;
+			rec = NULL;
+		}
+		
 		current.done(current, options, current.data);
 		switch (change.message)
 		{
@@ -2037,7 +2102,7 @@ int main()
 			{
 				delete options;
 				options = ReadOptions(CreateOptions(), "frog.config");
-				InitSRand(options);
+				options->seed = InitSRand(options);
 				current = game;
 				break;
 			}
@@ -2068,8 +2133,15 @@ int main()
 				current = game;
 				break;
 			}
-			case ChangeToRecord:
+			case ChangeToReplay:
 			{
+				rec = LoadRec();
+				delete options;
+				options = ReadOptions(CreateOptions(), rec->optionsName);
+				options->seed = rec->seed;
+				options->useSeed = true;
+				options->seed = InitSRand(options);
+				current = game;
 				break;
 			}
 		}
