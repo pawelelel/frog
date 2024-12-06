@@ -491,24 +491,24 @@ void StartDraw(const GameState& self, const Options* options, WINDOW* win)
 {
 	clear();
 	StartPair(FrogPair);
-	printw("     JJJ  U  U  M     M  PPP   I  N   N   GG        \n");
-	printw("       J  U  U  MM   MM  P  P  I  NN  N  G  G       \n");
-	printw("       J  U  U  M M M M  PPP   I  N N N  G          \n");
-	printw("       J  U  U  M  M  M  P     I  N  NN  G  GG      \n");
-	printw("     JJ    UU   M     M  P     I  N   N   GG        \n");
+	printw("     JJJ  U  U  M     M  PPP   I  N   N   GG\n");
+	printw("       J  U  U  MM   MM  P  P  I  NN  N  G  G\n");
+	printw("       J  U  U  M M M M  PPP   I  N N N  G\n");
+	printw("       J  U  U  M  M  M  P     I  N  NN  G  GG\n");
+	printw("     JJ    UU   M     M  P     I  N   N   GG\n");
 	printw("\n");
-	printw("              FFF  RRR    OO    GG                  \n");
-	printw("              F    R  R  O  O  G  G                 \n");
-	printw("              FFF  RRR   O  O  G                    \n");
-	printw("              F    R R   O  O  G  GG                \n");
-	printw("              F    R  R   OO    GG                  \n");
+	printw("              FFF  RRR    OO    GG\n");
+	printw("              F    R  R  O  O  G  G\n");
+	printw("              FFF  RRR   O  O  G\n");
+	printw("              F    R R   O  O  G  GG\n");
+	printw("              F    R  R   OO    GG\n");
 	printw("\n");
 	DrawStartFrog();
 	printw("\n");
-	printw("               s => start new game                  \n");
-	printw("               l => start level 1                   \n");
-	printw("               r => run last game                   \n");
-	printw("               q => quit program                    \n");
+	printw("               s => start new game\n");
+	printw("               l => start level 1\n");
+	printw("               r => run last game\n");
+	printw("               q => quit program\n");
 	EndPair(FrogPair);
 	wrefresh(win);
 }
@@ -1970,38 +1970,38 @@ Options* ReadOptions(Options* options, const char* fileName)
 	FILE* file = fopen(fileName, "r");
 	if (file != NULL)
 	{
-		const int bufferSize = 1024;
-		char buffer[bufferSize];
-		while (fgets(buffer, bufferSize - 1, file))
+		const int buffSize = 1024;
+		char buff[buffSize];
+		while (fgets(buff, buffSize - 1, file))
 		{
-			ReadGeneralOptions(buffer, options);
+			ReadGeneralOptions(buff, options);
 
-			ReadStringOption(buffer, "frog.skinOne", options->frog.skinOne);
-			ReadStringOption(buffer, "frog.skinTwo", options->frog.skinTwo);
+			ReadStringOption(buff, "frog.skinOne", options->frog.skinOne);
+			ReadStringOption(buff, "frog.skinTwo", options->frog.skinTwo);
 
-			ReadCarOptions(buffer, options);
+			ReadCarOptions(buff, options);
 
-			ReadIntOption(buffer, "road.roadNumber", options->road.roadNumber);
+			ReadIntOption(buff, "road.roadNumber", options->road.roadNumber);
 
-			ReadStringOption(buffer, "building.skin", options->building.skin);
-			ReadIntOption(buffer, "building.buildingsNumber", options->building.buildingsNumber);
+			ReadStringOption(buff, "building.skin", options->building.skin);
+			ReadIntOption(buff, "building.buildingsNumber", options->building.buildingsNumber);
 
-			ReadStorkOptions(buffer, options);
+			ReadStorkOptions(buff, options);
 			
-			ReadIntOption(buffer, "board.width", options->board.width);
+			ReadIntOption(buff, "board.width", options->board.width);
 
-			ReadBoolOption(buffer, "useSeed", options->useSeed);
+			ReadBoolOption(buff, "useSeed", options->useSeed);
 
-			ReadIntOption(buffer, "seed", options->seed);
+			ReadIntOption(buff, "seed", options->seed);
 			
-			ReadStringOption(buffer, "home.skin", options->home.skin);
+			ReadStringOption(buff, "home.skin", options->home.skin);
 
-			ReadStringOption(buffer, "files.bestScoresFileName", options->files.bestScoresFileName);
-			ReadStringOption(buffer, "files.self", options->files.self);
+			ReadStringOption(buff, "files.bestScoresFileName", options->files.bestScoresFileName);
+			ReadStringOption(buff, "files.self", options->files.self);
 
-			ReadColorsOptions1(buffer, options);
-			ReadColorsOptions2(buffer, options);
-			ReadColorsOptions3(buffer, options);
+			ReadColorsOptions1(buff, options);
+			ReadColorsOptions2(buff, options);
+			ReadColorsOptions3(buff, options);
 		}
 
 		fclose(file);
@@ -2065,32 +2065,50 @@ void ChangeToLevel1(Options*& options, GameStateChange change)
 	options->seed = InitSRand(options);
 }
 
+void InitGameStates(GameState& start, GameState& game, GameState& gameOver, Options* options)
+{
+	start = { &StartInit, &StartKeysHandler, &StartTimerHandler, &StartDraw, &StartDone, options, NULL, false };
+	game = { &GameInit, &GameKeysHandler, &GameTimerHandler, &GameDraw, &GameDone, options, NULL, true };
+	gameOver = { &GameOverInit, &GameOverKeysHandler, &GameOverTimerHandler, &GameOverDraw, &GameOverDone, options, NULL, false };
+}
+
+void StartReplay(Options*& options, GameState game, Recorder* rec, GameState& current)
+{
+	delete options;
+	options = ReadOptions(CreateOptions(), rec->optionsName);
+	options->seed = rec->seed;
+	options->useSeed = true;
+	options->seed = InitSRand(options);
+	current = game;
+}
+
 int main()
 {
-	Options* options = ReadOptions(CreateOptions(), "frog.config");
+	Options* ops = ReadOptions(CreateOptions(), "frog.config");
 
-	options->seed = InitSRand(options);
+	ops->seed = InitSRand(ops);
 
-	WINDOW* win = InitWindow(options->colors);
-	GameState start = { &StartInit, &StartKeysHandler, &StartTimerHandler, &StartDraw, &StartDone, options, NULL, false };
-	GameState game = { &GameInit, &GameKeysHandler, &GameTimerHandler, &GameDraw, &GameDone, options, NULL, true };
-	GameState gameOver = { &GameOverInit, &GameOverKeysHandler, &GameOverTimerHandler, &GameOverDraw, &GameOverDone, options, NULL, false };
+	WINDOW* win = InitWindow(ops->colors);
+	GameState start;
+	GameState game;
+	GameState gameOver;
+	InitGameStates(start, game, gameOver, ops);
 
 	Recorder* rec = NULL;
 
 	GameState current = start;
-	current.init(current, options, NULL);
+	current.init(current, ops, NULL);
 	
 	while (true)
 	{
-		GameStateChange change = MainLoop(current, options, rec, win);
+		GameStateChange change = MainLoop(current, ops, rec, win);
 		if (rec != NULL)
 		{
 			delete rec;
 			rec = NULL;
 		}
 		
-		current.done(current, options, current.data);
+		current.done(current, ops, current.data);
 		switch (change.message)
 		{
 			case ChangeToStart:
@@ -2100,9 +2118,9 @@ int main()
 			}
 			case ChangeToGame:
 			{
-				delete options;
-				options = ReadOptions(CreateOptions(), "frog.config");
-				options->seed = InitSRand(options);
+				delete ops;
+				ops = ReadOptions(CreateOptions(), "frog.config");
+				ops->seed = InitSRand(ops);
 				current = game;
 				break;
 			}
@@ -2112,7 +2130,7 @@ int main()
 				
 				if (message->won && NextLevelExists(message))
 				{
-					NextLevelCreate(options, change, message);
+					NextLevelCreate(ops, change, message);
 					break;
 				}
 
@@ -2129,22 +2147,17 @@ int main()
 			}
 			case ChangeToLevel:
 			{
-				ChangeToLevel1(options, change);
+				ChangeToLevel1(ops, change);
 				current = game;
 				break;
 			}
 			case ChangeToReplay:
 			{
 				rec = LoadRec();
-				delete options;
-				options = ReadOptions(CreateOptions(), rec->optionsName);
-				options->seed = rec->seed;
-				options->useSeed = true;
-				options->seed = InitSRand(options);
-				current = game;
+				StartReplay(ops, game, rec, current);
 				break;
 			}
 		}
-		current.init(current, options, change.data);
+		current.init(current, ops, change.data);
 	}
 }
