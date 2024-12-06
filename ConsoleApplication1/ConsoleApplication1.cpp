@@ -115,6 +115,7 @@ struct FrogOptions
 {
 	char* skinOne;
 	char* skinTwo;
+	int jumpTime;
 };
 
 struct StorkOptions
@@ -252,6 +253,7 @@ struct Frog
 {
 	int x, y;
 	int skin;
+	int jumpTime;
 
 	Car* car;
 	bool onCar;
@@ -288,6 +290,7 @@ struct Board
 	int width;
 	int score;
 	int time; // in miliseconds
+	int lastFrogJump;
 	int maxTime;// in seconds
 	Car* cars;
 	int carsNumber;
@@ -570,6 +573,11 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 	Board* board = (Board*)self.data;
 	bool jump = false;
 
+	if (board->time < board->lastFrogJump + board->frog.jumpTime)
+	{
+		return { ChangeNoChange, NULL };
+	}
+
 	switch (key)
 	{
 		case 'q':
@@ -579,6 +587,7 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 		case 'w':
 		{
 			jump = CanFrogJump(board->frog.x, board->frog.y - 1, board);
+			board->lastFrogJump = board->time;
 			if (jump)
 			{
 				board->frog.onCar = false;
@@ -595,6 +604,7 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 		case 'a':
 		{
 			jump = CanFrogJump(board->frog.x - 1, board->frog.y, board);
+			board->lastFrogJump = board->time;
 			if (jump)
 			{
 				board->frog.x--;
@@ -604,6 +614,7 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 		case 's':
 		{
 			jump = CanFrogJump(board->frog.x, board->frog.y + 1, board);
+			board->lastFrogJump = board->time;
 			if (jump)
 			{
 				board->frog.onCar = false;
@@ -620,6 +631,7 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 		case 'd':
 		{
 			jump = CanFrogJump(board->frog.x + 1, board->frog.y, board);
+			board->lastFrogJump = board->time;
 			if (jump)
 			{
 				board->frog.x++;
@@ -763,12 +775,27 @@ void WrapRight(Car& c, Board* b, const Options* options)
 	}
 }
 
+bool Brake(Car& c, Board* b, const Options* options)
+{
+	int distance = (int)round(c.x) - b->frog.x;
+	if (c.type == Friendly && 0 <= distance && distance <= options->car.breakDistance && c.roadNumber == b->frog.y)
+	{
+		return true;
+	}
+}
+
 GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 {
 	// TODO: zrobic tak, zeby samochody zatrzymywaly sie przed poprzednim
 	for (int i = 0; i < b->carsNumber; ++i)
 	{
 		Car& c = b->cars[i];
+
+		/*if (Brake(c, b, options))
+		{
+			
+		}*/
+
 		switch (b->roads[b->cars[i].roadNumber].direction)
 		{
 			case Left:
@@ -782,7 +809,8 @@ GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 				{
 					FrogGetInTaxi(b, c);
 				}
-				c.x -= deltaTime * c.speed / 1000.0f;
+				float f = deltaTime * c.speed / 1000.0f;
+				c.x -= f;
 				if (c.x <= 0)
 				{
 					WrapLeft(c, b, options);
@@ -800,7 +828,8 @@ GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 				{
 					FrogGetInTaxi(b, c);
 				}
-				c.x += deltaTime * c.speed / 1000.0f;
+				float f = deltaTime * c.speed / 1000.0f;
+				c.x += f;
 				if (c.x >= b->width)
 				{
 					WrapRight(c, b, options);
@@ -1067,10 +1096,10 @@ void InitRoads(Board* board, const Options* options)
 	board->roads[board->roadsNumber - 1].type = Grass;
 }
 
-void InitFrog(Board* board)
+void InitFrog(Board* board, const Options* options)
 {
 	int x = rand() % board->width / 2;
-	board->frog = { x, board->roadsNumber - 1, 0, NULL, false };
+	board->frog = { x, board->roadsNumber - 1, 0, options->frog.jumpTime, NULL, false };
 }
 
 void InitCars(Board* board, const Options* options)
@@ -1119,6 +1148,7 @@ void InitOtherVariables(Board* board, const Options* options)
 	board->home = { homeY, 0 };
 	board->time = 0;
 	board->maxTime = options->general.maxTime;
+	board->lastFrogJump = 0;
 }
 
 void InitStork(Board* board, const Options* options)
@@ -1138,7 +1168,7 @@ void GameInit(GameState& self, const Options* options, void* initData)
 
 	InitRoads(board, options);
 
-	InitFrog(board);
+	InitFrog(board, options);
 
 	InitCars(board, options);
 
@@ -1693,6 +1723,7 @@ void VariablesInitialization(Options* options)
 	strcpy(options->frog.skinOne, "F");
 	options->frog.skinTwo = new char[2];
 	strcpy(options->frog.skinTwo, "f");
+	options->frog.jumpTime = 1000;
 
 	options->home.skin = new char[2];
 	strcpy(options->home.skin, "H");
@@ -1749,7 +1780,7 @@ Options* CreateOptions()
 	options->colors.RoadFont = { 179, 179, 179 };
 	options->colors.RoadBack = { 179, 179, 179 };
 
-	options->colors.HomeFont = { 188, 74, 60 };
+	options->colors.HomeFont = { 255, 0, 0 };
 	options->colors.HomeBack = { 65, 152, 10 };
 
 	options->colors.TaxiFont = { 255, 255, 0 };
@@ -1978,6 +2009,7 @@ Options* ReadOptions(Options* options, const char* fileName)
 
 			ReadStringOption(buff, "frog.skinOne", options->frog.skinOne);
 			ReadStringOption(buff, "frog.skinTwo", options->frog.skinTwo);
+			ReadIntOption(buff, "frog.jumpTime", options->frog.jumpTime);
 
 			ReadCarOptions(buff, options);
 
@@ -2161,4 +2193,3 @@ int main()
 		current.init(current, ops, change.data);
 	}
 }
-//TODO: Zmienic kolory domu
