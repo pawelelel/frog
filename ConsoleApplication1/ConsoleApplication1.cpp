@@ -2161,3 +2161,4 @@ int main()
 		current.init(current, ops, change.data);
 	}
 }
+//TODO: Zmienic kolory domu
