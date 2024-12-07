@@ -775,26 +775,13 @@ void WrapRight(Car& c, Board* b, const Options* options)
 	}
 }
 
-bool Brake(Car& c, Board* b, const Options* options)
-{
-	int distance = (int)round(c.x) - b->frog.x;
-	if (c.type == Friendly && 0 <= distance && distance <= options->car.breakDistance && c.roadNumber == b->frog.y)
-	{
-		return true;
-	}
-}
-
 GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 {
-	// TODO: zrobic tak, zeby samochody zatrzymywaly sie przed poprzednim
 	for (int i = 0; i < b->carsNumber; ++i)
 	{
 		Car& c = b->cars[i];
 
-		/*if (Brake(c, b, options))
-		{
-			
-		}*/
+		float f = deltaTime * c.speed / 1000.0f;
 
 		switch (b->roads[b->cars[i].roadNumber].direction)
 		{
@@ -809,7 +796,6 @@ GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 				{
 					FrogGetInTaxi(b, c);
 				}
-				float f = deltaTime * c.speed / 1000.0f;
 				c.x -= f;
 				if (c.x <= 0)
 				{
@@ -828,7 +814,6 @@ GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 				{
 					FrogGetInTaxi(b, c);
 				}
-				float f = deltaTime * c.speed / 1000.0f;
 				c.x += f;
 				if (c.x >= b->width)
 				{
@@ -1665,7 +1650,7 @@ GameStateChange MainLoopRecordable(const GameState& current, const Options* opti
 				if (change.message == ChangeToGameOver && current.recordable)
 				{
 					SaveRec(rec);
-					delete rec->events;
+					delete[] rec->events;
 					delete rec;
 				}
 
@@ -1723,7 +1708,7 @@ void VariablesInitialization(Options* options)
 	strcpy(options->frog.skinOne, "F");
 	options->frog.skinTwo = new char[2];
 	strcpy(options->frog.skinTwo, "f");
-	options->frog.jumpTime = 1000;
+	options->frog.jumpTime = 100;
 
 	options->home.skin = new char[2];
 	strcpy(options->home.skin, "H");
