@@ -322,10 +322,21 @@ struct Recorder
 	int eventsCount;
 };
 
+float Max(float a, float b)
+{
+	return a > b ? a : b;
+}
+
+float Min(float a, float b)
+{
+	return a < b ? a : b;
+}
+
 // Window
 
 void InitColor(short colorId, int r, int g, int b)
 {
+	// changing rgb from 0-1000 to 0-255
 	r = r * 200 / 51;
 	g = g * 200 / 51;
 	b = b * 200 / 51;
@@ -542,6 +553,11 @@ bool IsFrogInHome(const Frog& frog, const Home& home)
 
 bool CanFrogJump(const int newX, const int newY, const Board* b)
 {
+	if (b->time < b->lastFrogJump + b->frog.jumpTime)
+	{
+		return false;
+	}
+
 	if (newY < 0)
 	{
 		return false;
@@ -574,11 +590,6 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 	Board* b = (Board*)self.data;
 	bool jump = false;
 
-	if (b->time < b->lastFrogJump + b->frog.jumpTime)
-	{
-		return { ChangeNoChange, NULL };
-	}
-
 	switch (key)
 	{
 		case 'q':
@@ -588,9 +599,9 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 		case 'w':
 		{
 			jump = CanFrogJump(b->frog.x, b->frog.y - 1, b);
-			b->lastFrogJump = b->time;
 			if (jump)
 			{
+				b->lastFrogJump = b->time;
 				b->frog.onCar = false;
 				b->frog.car = NULL;
 				b->frog.y--;
@@ -605,9 +616,10 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 		case 'a':
 		{
 			jump = CanFrogJump(b->frog.x - 1, b->frog.y, b);
-			b->lastFrogJump = b->time;
+			
 			if (jump)
 			{
+				b->lastFrogJump = b->time;
 				b->frog.x--;
 			}
 			break;
@@ -615,9 +627,9 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 		case 's':
 		{
 			jump = CanFrogJump(b->frog.x, b->frog.y + 1, b);
-			b->lastFrogJump = b->time;
 			if (jump)
 			{
+				b->lastFrogJump = b->time;
 				b->frog.onCar = false;
 				b->frog.car = NULL;
 				b->frog.y++;
@@ -632,16 +644,16 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 		case 'd':
 		{
 			jump = CanFrogJump(b->frog.x + 1, b->frog.y, b);
-			b->lastFrogJump = b->time;
 			if (jump)
 			{
+				b->lastFrogJump = b->time;
 				b->frog.x++;
 			}
 			break;
 		}
-	case 'j':
+		case 'j':
 			{
-		b->jumpToTaxi = true;
+				b->jumpToTaxi = true;
 				break;
 			}
 		default: break;
@@ -656,10 +668,12 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 	return { ChangeNoChange, NULL };
 }
 
-bool IsFrogHitted(const Frog& f, const Car& c)
+bool IsFrogHitted(const Frog& f, const Car& c, float prevX)
 {
-	// TODO: czy dla szybkich samochodow, nie zdazy sie tak, ze przeskoczy on nad zaba
-	if (c.type == Bad && !f.onCar && f.x == (int)round(c.x) && f.y == c.roadNumber)
+	float minX = Min(prevX, c.x);
+	float maxX = Max(prevX, c.x);
+
+	if (c.type == Bad && !f.onCar && f.y == c.roadNumber && minX <= f.x && f.x <= maxX)
 	{
 		return true;
 	}
@@ -701,15 +715,12 @@ void ChangeCarSpeed(Car& c, const CarOptions& options)
 
 void FrogGetInTaxi(Board* b, Car& c)
 {
-	if (b->jumpToTaxi)
+	if (!b->frog.onCar)
 	{
-		if (!b->frog.onCar)
-		{
-			b->frog.car = &c;
-			b->score++;
-			b->frog.onCar = true;
-			b->jumpToTaxi = false;
-		}
+		b->frog.car = &c;
+		b->score++;
+		b->frog.onCar = true;
+		b->jumpToTaxi = false;
 	}
 }
 
@@ -785,34 +796,75 @@ void WrapRight(Car& c, Board* b, const Options* options)
 	}
 }
 
-GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
+void IsCarTooCloseToOtherRight(Board* b, const Options* options, Car& c, int carNo, float prevX)
 {
 	for (int i = 0; i < b->carsNumber; ++i)
 	{
-		Car& c = b->cars[i];
-
-		float f = deltaTime * c.speed / 1000.0f;
-		if (f > 1)
+		Car& other = b->cars[i];
+		if (i == carNo || c.roadNumber != other.roadNumber)
 		{
-			int a = -1;
+			continue;
 		}
+
+		float back = other.x - other.size;
+		if (prevX < back && back - options->car.breakDistance < c.x)
+		{
+			c.x = Max(prevX, back - options->car.breakDistance);
+			return;
+		}
+	}
+}
+
+void IsCarTooCloseToOtherLeft(Board* b, const Options* options, Car& c, int carNo, float prevX)
+{
+	for (int i = 0; i < b->carsNumber; ++i)
+	{
+		Car& other = b->cars[i];
+		if (i == carNo || c.roadNumber != other.roadNumber)
+		{
+			continue;
+		}
+
+		float back = other.x + other.size;
+		if (back < prevX && c.x < back + options->car.breakDistance)
+		{
+			c.x = Min(prevX, back + options->car.breakDistance);
+			return;
+		}
+	}
+}
+
+GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
+{
+	Frog f = b->frog;
+	for (int i = 0; i < b->carsNumber; ++i)
+	{
+		Car& c = b->cars[i];
+		float d = deltaTime * c.speed / 1000.0f;
+		float prevX = c.x;
 
 		switch (b->roads[b->cars[i].roadNumber].direction)
 		{
 			case Left:
 			{
-				c.x -= f;
+				c.x -= d;
+
+				IsCarTooCloseToOtherLeft(b, options, c, i, prevX);
+
+				int distance = (int)round(c.x) - f.x;
+				if (c.type == Friendly && f.x < prevX && distance <= options->car.breakDistance && c.roadNumber == f.y)
+				{
+					c.x = Min(prevX, f.x + options->car.breakDistance);
+					break;
+				}
+
 				if (c.x <= 0)
 				{
 					WrapLeft(c, b, options);
+					continue;
 				}
 
-				int distance = (int)round(c.x) - b->frog.x;
-				if (c.type == Friendly && 0 <= distance && distance <= options->car.breakDistance && c.roadNumber == b->frog.y)
-				{
-					break;
-				}
-				if (c.type == Taxi && (int)round(c.x) - 1 == b->frog.x && c.roadNumber == b->frog.y)
+				if (c.type == Taxi && (int)round(c.x) - 1 == f.x && c.roadNumber == f.y && b->jumpToTaxi)
 				{
 					FrogGetInTaxi(b, c);
 				}
@@ -820,26 +872,32 @@ GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 			}
 			case Right:
 			{
-				c.x += f;
+				c.x += d;
+
+				IsCarTooCloseToOtherRight(b, options, c, i, prevX);
+
+				int distance = f.x - (int)round(c.x);
+				if (c.type == Friendly && prevX < f.x && distance <= options->car.breakDistance && c.roadNumber == f.y)
+				{
+					c.x = Max(prevX, f.x - options->car.breakDistance);
+					break;
+				}
+
 				if (c.x >= b->width)
 				{
 					WrapRight(c, b, options);
+					continue;
 				}
-
-				int distance = b->frog.x - (int)round(c.x);
-				if (c.type == Friendly && 0 <= distance && distance <= options->car.breakDistance && c.roadNumber == b->frog.y)
-				{
-					break;
-				}
-				if (c.type == Taxi && (int)round(c.x) + 1 == b->frog.x && c.roadNumber == b->frog.y)
+				
+				if (c.type == Taxi && (int)round(c.x) + 1 == f.x && c.roadNumber == f.y && b->jumpToTaxi)
 				{
 					FrogGetInTaxi(b, c);
 				}
 				break;
 			}
 		}
-		ChangeCarSpeed(c, options->car);
-		if (IsFrogHitted(b->frog, c))
+
+		if (IsFrogHitted(f, c, prevX))
 		{
 			GameOverMessageData* data = new GameOverMessageData{ false, 0 };
 			return { ChangeToGameOver, data };
@@ -915,6 +973,12 @@ GameStateChange GameTimerHandler(const GameState& self, const Options* options, 
 		GameOverMessageData* data = new GameOverMessageData{ false, 0 };
 		return { ChangeToGameOver, data };
 	}
+
+	for (int i = 0; i < b->carsNumber; ++i)
+	{
+		ChangeCarSpeed(b->cars[i], options->car);
+	}
+
 	return { ChangeNoChange, NULL };
 }
 
@@ -926,7 +990,7 @@ void DrawStreet(int width)
 		printw("=");
 	}
 	EndPair(RoadPair);
-}
+} 
 
 void DrawGrass(int width)
 {
@@ -2204,4 +2268,4 @@ int main()
 	}
 }
 
-//stos 3
+//stos 5
