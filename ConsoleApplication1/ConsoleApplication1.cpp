@@ -834,6 +834,58 @@ void IsCarTooCloseToOtherLeft(Board* b, const Options* options, Car& c, int carN
 	}
 }
 
+bool HandleLeftCarsMovement(Board* b, const Options* options, Frog f, int i, Car& c, float d, float prevX)
+{
+	c.x -= d;
+
+	IsCarTooCloseToOtherLeft(b, options, c, i, prevX);
+
+	int distance = (int)round(c.x) - f.x;
+	if (c.type == Friendly && f.x < prevX && distance <= options->car.breakDistance && c.roadNumber == f.y)
+	{
+		c.x = Min(prevX, f.x + options->car.breakDistance);
+		return true;
+	}
+
+	if (c.x <= 0)
+	{
+		WrapLeft(c, b, options);
+		return false;
+	}
+
+	if (c.type == Taxi && (int)round(c.x) - 1 == f.x && c.roadNumber == f.y && b->jumpToTaxi)
+	{
+		FrogGetInTaxi(b, c);
+	}
+	return true;
+}
+
+bool HandleRightCarsMovement(Board* b, const Options* options, Frog f, int i, Car& c, float d, float prevX)
+{
+	c.x += d;
+
+	IsCarTooCloseToOtherRight(b, options, c, i, prevX);
+
+	int distance = f.x - (int)round(c.x);
+	if (c.type == Friendly && prevX < f.x && distance <= options->car.breakDistance && c.roadNumber == f.y)
+	{
+		c.x = Max(prevX, f.x - options->car.breakDistance);
+		return true;
+	}
+
+	if (c.x >= b->width)
+	{
+		WrapRight(c, b, options);
+		return false;
+	}
+				
+	if (c.type == Taxi && (int)round(c.x) + 1 == f.x && c.roadNumber == f.y && b->jumpToTaxi)
+	{
+		FrogGetInTaxi(b, c);
+	}
+	return true;
+}
+
 GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 {
 	Frog f = b->frog;
@@ -847,53 +899,19 @@ GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 		{
 			case Left:
 			{
-				c.x -= d;
-
-				IsCarTooCloseToOtherLeft(b, options, c, i, prevX);
-
-				int distance = (int)round(c.x) - f.x;
-				if (c.type == Friendly && f.x < prevX && distance <= options->car.breakDistance && c.roadNumber == f.y)
+				if (HandleLeftCarsMovement(b, options, f, i, c, d, prevX))
 				{
-					c.x = Min(prevX, f.x + options->car.breakDistance);
 					break;
 				}
-
-				if (c.x <= 0)
-				{
-					WrapLeft(c, b, options);
-					continue;
-				}
-
-				if (c.type == Taxi && (int)round(c.x) - 1 == f.x && c.roadNumber == f.y && b->jumpToTaxi)
-				{
-					FrogGetInTaxi(b, c);
-				}
-				break;
+				continue;
 			}
 			case Right:
 			{
-				c.x += d;
-
-				IsCarTooCloseToOtherRight(b, options, c, i, prevX);
-
-				int distance = f.x - (int)round(c.x);
-				if (c.type == Friendly && prevX < f.x && distance <= options->car.breakDistance && c.roadNumber == f.y)
+				if (HandleRightCarsMovement(b, options, f, i, c, d, prevX))
 				{
-					c.x = Max(prevX, f.x - options->car.breakDistance);
 					break;
 				}
-
-				if (c.x >= b->width)
-				{
-					WrapRight(c, b, options);
-					continue;
-				}
-				
-				if (c.type == Taxi && (int)round(c.x) + 1 == f.x && c.roadNumber == f.y && b->jumpToTaxi)
-				{
-					FrogGetInTaxi(b, c);
-				}
-				break;
+				continue;
 			}
 		}
 
@@ -2268,4 +2286,5 @@ int main()
 	}
 }
 
-//stos 5
+//My github account with project: https://github.com/pawelelel/frog
+//stos 8
