@@ -298,6 +298,7 @@ struct Board
 	int buildingsNumber;
 	Stork stork;
 	int levelId;
+	bool jumpToTaxi;
 };
 
 struct ChangeLevelData
@@ -570,10 +571,10 @@ bool CanFrogJump(const int newX, const int newY, const Board* b)
 
 GameStateChange GameKeysHandler(const GameState& self, int key)
 {
-	Board* board = (Board*)self.data;
+	Board* b = (Board*)self.data;
 	bool jump = false;
 
-	if (board->time < board->lastFrogJump + board->frog.jumpTime)
+	if (b->time < b->lastFrogJump + b->frog.jumpTime)
 	{
 		return { ChangeNoChange, NULL };
 	}
@@ -586,65 +587,70 @@ GameStateChange GameKeysHandler(const GameState& self, int key)
 		}
 		case 'w':
 		{
-			jump = CanFrogJump(board->frog.x, board->frog.y - 1, board);
-			board->lastFrogJump = board->time;
+			jump = CanFrogJump(b->frog.x, b->frog.y - 1, b);
+			b->lastFrogJump = b->time;
 			if (jump)
 			{
-				board->frog.onCar = false;
-				board->frog.car = NULL;
-				board->frog.y--;
+				b->frog.onCar = false;
+				b->frog.car = NULL;
+				b->frog.y--;
 
-				if (board->roads[board->frog.y].type == Street)
+				if (b->roads[b->frog.y].type == Street)
 				{
-					board->score++;
+					b->score++;
 				}
 			}
 			break;
 		}
 		case 'a':
 		{
-			jump = CanFrogJump(board->frog.x - 1, board->frog.y, board);
-			board->lastFrogJump = board->time;
+			jump = CanFrogJump(b->frog.x - 1, b->frog.y, b);
+			b->lastFrogJump = b->time;
 			if (jump)
 			{
-				board->frog.x--;
+				b->frog.x--;
 			}
 			break;
 		}
 		case 's':
 		{
-			jump = CanFrogJump(board->frog.x, board->frog.y + 1, board);
-			board->lastFrogJump = board->time;
+			jump = CanFrogJump(b->frog.x, b->frog.y + 1, b);
+			b->lastFrogJump = b->time;
 			if (jump)
 			{
-				board->frog.onCar = false;
-				board->frog.car = NULL;
-				board->frog.y++;
+				b->frog.onCar = false;
+				b->frog.car = NULL;
+				b->frog.y++;
 
-				if (board->roads[board->frog.y].type == Street)
+				if (b->roads[b->frog.y].type == Street)
 				{
-					board->score++;
+					b->score++;
 				}
 			}
 			break;
 		}
 		case 'd':
 		{
-			jump = CanFrogJump(board->frog.x + 1, board->frog.y, board);
-			board->lastFrogJump = board->time;
+			jump = CanFrogJump(b->frog.x + 1, b->frog.y, b);
+			b->lastFrogJump = b->time;
 			if (jump)
 			{
-				board->frog.x++;
+				b->frog.x++;
 			}
 			break;
 		}
+	case 'j':
+			{
+		b->jumpToTaxi = true;
+				break;
+			}
 		default: break;
 	}
 
-	if (jump && IsFrogInHome(board->frog, board->home))
+	if (jump && IsFrogInHome(b->frog, b->home))
 	{
-		board->score += board->maxTime - board->time / 1000;
-		GameOverMessageData* data = new GameOverMessageData{ true, board->score, board->levelId };
+		b->score += b->maxTime - b->time / 1000;
+		GameOverMessageData* data = new GameOverMessageData{ true, b->score, b->levelId };
 		return { ChangeToGameOver, data };
 	}
 	return { ChangeNoChange, NULL };
@@ -695,12 +701,16 @@ void ChangeCarSpeed(Car& c, const CarOptions& options)
 
 void FrogGetInTaxi(Board* b, Car& c)
 {
-	b->frog.car = &c;
-	if (!b->frog.onCar)
+	if (b->jumpToTaxi)
 	{
-		b->score++;
+		if (!b->frog.onCar)
+		{
+			b->frog.car = &c;
+			b->score++;
+			b->frog.onCar = true;
+			b->jumpToTaxi = false;
+		}
 	}
-	b->frog.onCar = true;
 }
 
 int GetNumberOfStreets(const Board* b, RoadType road)
@@ -782,11 +792,21 @@ GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 		Car& c = b->cars[i];
 
 		float f = deltaTime * c.speed / 1000.0f;
+		if (f > 1)
+		{
+			int a = -1;
+		}
 
 		switch (b->roads[b->cars[i].roadNumber].direction)
 		{
 			case Left:
 			{
+				c.x -= f;
+				if (c.x <= 0)
+				{
+					WrapLeft(c, b, options);
+				}
+
 				int distance = (int)round(c.x) - b->frog.x;
 				if (c.type == Friendly && 0 <= distance && distance <= options->car.breakDistance && c.roadNumber == b->frog.y)
 				{
@@ -796,15 +816,16 @@ GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 				{
 					FrogGetInTaxi(b, c);
 				}
-				c.x -= f;
-				if (c.x <= 0)
-				{
-					WrapLeft(c, b, options);
-				}
 				break;
 			}
 			case Right:
 			{
+				c.x += f;
+				if (c.x >= b->width)
+				{
+					WrapRight(c, b, options);
+				}
+
 				int distance = b->frog.x - (int)round(c.x);
 				if (c.type == Friendly && 0 <= distance && distance <= options->car.breakDistance && c.roadNumber == b->frog.y)
 				{
@@ -813,11 +834,6 @@ GameStateChange MoveCars(Board* b, const Options* options, int deltaTime)
 				if (c.type == Taxi && (int)round(c.x) + 1 == b->frog.x && c.roadNumber == b->frog.y)
 				{
 					FrogGetInTaxi(b, c);
-				}
-				c.x += f;
-				if (c.x >= b->width)
-				{
-					WrapRight(c, b, options);
 				}
 				break;
 			}
@@ -1018,7 +1034,15 @@ void GameDraw(const GameState& self, const Options* options, WINDOW*win)
 
 	// upper status area containing inforamtion about time and score
 	const int upperStatusAreaSize = 1;
-	printw("Time left: %ds  Score: %d  Level: %d\n", board->maxTime - board->time/1000, board->score, board->levelId);
+
+	char jmp[] = "false";
+
+	if (board->jumpToTaxi)
+	{
+		strcpy(jmp, "true");
+	}
+
+	printw("Time left: %ds  Score: %d  Level: %d  Jump: %s\n", board->maxTime - board->time/1000, board->score, board->levelId, jmp);
 	
 	// roads
 	for (int i = 0; i < board->roadsNumber; ++i)
@@ -1150,6 +1174,7 @@ void GameInit(GameState& self, const Options* options, void* initData)
 	board->score = level->score;
 	
 	board->width = options->board.width;
+	board->jumpToTaxi = false;
 
 	InitRoads(board, options);
 
@@ -1981,7 +2006,7 @@ void ReadColorsOptions3(char buffer[], Options* options)
 	ReadRgbOption(buffer, "colors.BuildingBack", options->colors.BuildingBack);
 }
 
-Options* ReadOptions(Options* options, const char* fileName)
+Options* ReadOptions(Options* opt, const char* fileName)
 {
 	FILE* file = fopen(fileName, "r");
 	if (file != NULL)
@@ -1990,41 +2015,41 @@ Options* ReadOptions(Options* options, const char* fileName)
 		char buff[buffSize];
 		while (fgets(buff, buffSize - 1, file))
 		{
-			ReadGeneralOptions(buff, options);
+			ReadGeneralOptions(buff, opt);
 
-			ReadStringOption(buff, "frog.skinOne", options->frog.skinOne);
-			ReadStringOption(buff, "frog.skinTwo", options->frog.skinTwo);
-			ReadIntOption(buff, "frog.jumpTime", options->frog.jumpTime);
+			ReadStringOption(buff, "frog.skinOne", opt->frog.skinOne);
+			ReadStringOption(buff, "frog.skinTwo", opt->frog.skinTwo);
+			ReadIntOption(buff, "frog.jumpTime", opt->frog.jumpTime);
 
-			ReadCarOptions(buff, options);
+			ReadCarOptions(buff, opt);
 
-			ReadIntOption(buff, "road.roadNumber", options->road.roadNumber);
+			ReadIntOption(buff, "road.roadNumber", opt->road.roadNumber);
 
-			ReadStringOption(buff, "building.skin", options->building.skin);
-			ReadIntOption(buff, "building.buildingsNumber", options->building.buildingsNumber);
+			ReadStringOption(buff, "building.skin", opt->building.skin);
+			ReadIntOption(buff, "building.buildingsNumber", opt->building.buildingsNumber);
 
-			ReadStorkOptions(buff, options);
+			ReadStorkOptions(buff, opt);
 			
-			ReadIntOption(buff, "board.width", options->board.width);
+			ReadIntOption(buff, "board.width", opt->board.width);
 
-			ReadBoolOption(buff, "useSeed", options->useSeed);
+			ReadBoolOption(buff, "useSeed", opt->useSeed);
 
-			ReadIntOption(buff, "seed", options->seed);
+			ReadIntOption(buff, "seed", opt->seed);
 			
-			ReadStringOption(buff, "home.skin", options->home.skin);
+			ReadStringOption(buff, "home.skin", opt->home.skin);
 
-			ReadStringOption(buff, "files.bestScoresFileName", options->files.bestScoresFileName);
-			ReadStringOption(buff, "files.self", options->files.self);
+			ReadStringOption(buff, "files.bestScoresFileName", opt->files.bestScoresFileName);
+			ReadStringOption(buff, "files.self", opt->files.self);
 
-			ReadColorsOptions1(buff, options);
-			ReadColorsOptions2(buff, options);
-			ReadColorsOptions3(buff, options);
+			ReadColorsOptions1(buff, opt);
+			ReadColorsOptions2(buff, opt);
+			ReadColorsOptions3(buff, opt);
 		}
 
 		fclose(file);
 	}
 
-	return options;
+	return opt;
 }
 
 int InitSRand(Options* options)
@@ -2178,3 +2203,5 @@ int main()
 		current.init(current, ops, change.data);
 	}
 }
+
+//stos 3
